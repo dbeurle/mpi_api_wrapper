@@ -13,6 +13,8 @@ Instead of lengthy mpi calls using the c interface, the calls become:
 auto const total_sum = mpi::all_reduce(my_local_sum, mpi::sum{});
 ```
 
+because the type of `my_local_sum` is matched to the correct `MPI_DataType` and the size is known.  The default communicator is taken as mpi comm world but this can be specified if required.
+
 When sending, the type of the argument is deduced and this passes it through to the mpi call.  However, when receiving a template parameter is required in order to properly deduce the return value:
 
 ```cpp
