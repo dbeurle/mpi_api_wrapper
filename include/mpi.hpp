@@ -144,6 +144,73 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
     return recieve_value;
 }
 
+/*----------------------------------------------------------------------------*
+ *                           BROADCAST OPERATIONS                             *
+ *----------------------------------------------------------------------------*/
+
+/**
+ * broadcast sends the local data from the host_processor across the
+ * communicator
+ * which is defaulted to 0
+ * The result can be read out from the host_processor and the slave processors
+ * are none the wiser.
+ * @param local_data value to send if we are the host_processor
+ * @param host_processor process responsible for sending out the data
+ * @param comm MPI communicator
+ * @return the broadcast data
+ */
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
+    T local_data,
+    int const host_processor = 0,
+    communicator const comm = communicator::world)
+{
+    MPI_Bcast(&local_data,
+              1,
+              data_type<T>::tag,
+              host_processor,
+              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+
+    return local_data;
+}
+
+/**
+ * broadcast sends the local data from the host_processor across the
+ * communicator
+ * which is defaulted to 0
+ * The result can be read out from the host_processor and the slave processors
+ * are none the wiser.
+ * @param local_data value to send if we are the host_processor
+ * @param host_processor process responsible for sending out the data
+ * @param comm MPI communicator
+ * @return the broadcast data
+ */
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> broadcast(
+    T local_data,
+    int const host_processor = 0,
+    communicator const comm = communicator::world)
+{
+    MPI_Bcast(local_data.data(),
+              local_data.size(),
+              data_type<typename T::value_type>::tag,
+              host_processor,
+              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+
+    return local_data;
+}
+
+/*----------------------------------------------------------------------------*
+ *                           REDUCTION OPERATIONS                             *
+ *----------------------------------------------------------------------------*/
+
+/**
+ * reduce computes across the Operation_tp and stores the result in
+ * @param host_processor
+ * which is defaulted to 0
+ * The result can be read out from the host_processor and the slave processors
+ * are none the wiser.
+ */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
     T const local_data,
@@ -163,6 +230,13 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
     return collected_data;
 }
 
+/**
+ * reduce computes across the Operation_tp and stores the result in
+ * @param host_processor
+ * which is defaulted to 0
+ * The result can be read out from the host_processor and the slave processors
+ * are none the wiser.
+ */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> reduce(
     T const& local_data,
@@ -170,7 +244,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
     int const host_processor = 0,
     communicator const comm = communicator::world)
 {
-    T collected_data = local_data;
+    T collected_data(local_data.size());
 
     MPI_Reduce(local_data.data(),
                collected_data.data(),
@@ -213,7 +287,6 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
  * This function allocates a vector of the same type and size of the input vector
  * and fills it with the result from the all_reduce operation
  */
-
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_reduce(
     T const& local_reduction_variable,

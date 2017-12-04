@@ -92,8 +92,7 @@ TEST_CASE("Reduction operations")
     }
     SECTION("Vector valued reduce")
     {
-        std::array<int, 2> array;
-        array.fill(mpi::rank());
+        std::vector<int> array(2, mpi::rank());
 
         auto const root_sum = mpi::reduce(array, mpi::sum{}, 1);
         if (mpi::rank() == 1)
