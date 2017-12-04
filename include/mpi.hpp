@@ -1,10 +1,8 @@
 
 #pragma once
 
-#include <array>
 #include <iostream>
 #include <type_traits>
-#include <vector>
 
 #include <mpi.h>
 
@@ -112,14 +110,13 @@ struct data_type<bool>
  * operations defined on it.  This function call is only for scalar (primitive)
  * values.
  */
-
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value> send(
     T const send_value,
     int const destination_process,
     communicator const comm = communicator::world)
 {
-    int message_tag;
+    int message_tag = 0;
     MPI_Send(&send_value,
              1,
              data_type<T>::tag,
@@ -133,7 +130,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
     int const source_process,
     communicator const comm = communicator::world)
 {
-    int message_tag;
+    int message_tag = 0;
     T recieve_value;
 
     MPI_Recv(&recieve_value,
@@ -147,17 +144,55 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
     return recieve_value;
 }
 
+template <typename T, typename Operation_Tp>
+inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
+    T const local_data,
+    Operation_Tp&& operation_type,
+    int const host_processor = 0,
+    communicator const comm = communicator::world)
+{
+    T collected_data;
+
+    MPI_Reduce(&local_data,
+               &collected_data,
+               1,
+               data_type<T>::tag,
+               operation_type.tag,
+               host_processor,
+               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+    return collected_data;
+}
+
+template <typename T, typename Operation_Tp>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> reduce(
+    T const& local_data,
+    Operation_Tp&& operation_type,
+    int const host_processor = 0,
+    communicator const comm = communicator::world)
+{
+    T collected_data = local_data;
+
+    MPI_Reduce(local_data.data(),
+               collected_data.data(),
+               local_data.size(),
+               data_type<typename T::value_type>::tag,
+               operation_type.tag,
+               host_processor,
+               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+
+    return collected_data;
+}
+
 /**
  * Perform an MPI Allreduce operation on types which are able to have primitive
  * operations defined on it.  This function call is only for scalar (primitive)
  * values.
  */
-// clang-format off
 template <typename T, typename Operation_Tp>
-inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(T const local_reduction_variable,
-                                                                    Operation_Tp&& operation,
-                                                                    communicator const comm = communicator::world)
-// clang-format on
+inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
+    T const local_reduction_variable,
+    Operation_Tp&& operation,
+    communicator const comm = communicator::world)
 {
     T reduction_variable;
 
@@ -178,32 +213,31 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(T const loca
  * This function allocates a vector of the same type and size of the input vector
  * and fills it with the result from the all_reduce operation
  */
-// clang-format off
+
 template <typename T, typename Operation_Tp>
-inline std::enable_if_t<std::is_arithmetic<T>::value, std::vector<T>> all_reduce(std::vector<T> const& local_reduction_variable,
-                                                                                 Operation_Tp&& operation,
-                                                                                 communicator const comm = communicator::world)
-// clang-format on
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_reduce(
+    T const& local_reduction_variable,
+    Operation_Tp&& operation,
+    communicator const comm = communicator::world)
 {
-    std::vector<T> reduction_variable(local_reduction_variable.size());
+    T reduction_variable(local_reduction_variable.size());
 
     MPI_Allreduce(local_reduction_variable.data(),
                   reduction_variable.data(),
                   reduction_variable.size(),
-                  data_type<T>::tag,
+                  data_type<typename T::value_type>::tag,
                   operation.tag,
                   comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
     return reduction_variable;
 }
 
-// clang-format off
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value, std::vector<T>> all_to_all(T const local_data,
-                                                                                 communicator const comm = communicator::world)
-// clang-format on
+inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
+    T const local_data,
+    communicator const comm = communicator::world)
 {
-    std::vector<T> collected_data(mpi::size(comm));
+    T collected_data(mpi::size(comm));
 
     MPI_Alltoall(&local_data,
                  1,
@@ -216,20 +250,19 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, std::vector<T>> all_to_all
     return collected_data;
 }
 
-// clang-format off
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value, std::vector<T>> all_to_all(std::vector<T> const& local_data,
-                                                                                 communicator const comm = communicator::world)
-// clang-format on
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_to_all(
+    T const& local_data,
+    communicator const comm = communicator::world)
 {
-    std::vector<T> collected_data(local_data.size() * mpi::size(comm));
+    T collected_data(local_data.size() * mpi::size(comm));
 
     MPI_Alltoall(local_data.data(),
                  local_data.size(),
-                 data_type<T>::tag,
+                 data_type<typename T::value_type>::tag,
                  collected_data.data(),
                  collected_data.size(),
-                 data_type<T>::tag,
+                 data_type<typename T::value_type>::tag,
                  comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
     return collected_data;

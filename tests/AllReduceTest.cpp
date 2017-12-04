@@ -30,58 +30,13 @@ int main(int argc, char* argv[])
     return session.run();
 }
 
-TEST_CASE("Point to point communication")
-{
-    SECTION("float32")
-    {
-        if (mpi::rank() == 0)
-        {
-            mpi::send(2.157864f, 1);
-        }
-        else if (mpi::rank() == 1)
-        {
-            REQUIRE(mpi::receive<float>(0) == Approx(2.157864f));
-        }
-    }
-    SECTION("float64")
-    {
-        if (mpi::rank() == 0)
-        {
-            mpi::send(2.157864, 1);
-        }
-        else if (mpi::rank() == 1)
-        {
-            REQUIRE(mpi::receive<double>(0) == Approx(2.157864));
-        }
-    }
-    SECTION("int32")
-    {
-        if (mpi::rank() == 0)
-        {
-            mpi::send(15, 1);
-        }
-        else if (mpi::rank() == 1)
-        {
-            REQUIRE(mpi::receive<int>(0) == 15);
-        }
-    }
-    SECTION("int64")
-    {
-        if (mpi::rank() == 0)
-        {
-            mpi::send(15l, 1);
-        }
-        else if (mpi::rank() == 1)
-        {
-            REQUIRE(mpi::receive<long>(0) == 15l);
-        }
-    }
-}
-
 TEST_CASE("Reduction operations")
 {
-    SECTION("Basic checks") { REQUIRE(mpi::rank() < mpi::size()); }
-
+    SECTION("Basic checks")
+    {
+        REQUIRE(mpi::size() == 2);
+        REQUIRE(mpi::rank() < mpi::size());
+    }
     SECTION("Scalar valued all reduce")
     {
         REQUIRE(mpi::all_reduce(1, mpi::sum{}) == mpi::size());
@@ -92,15 +47,88 @@ TEST_CASE("Reduction operations")
 
         REQUIRE(mpi::all_reduce(mpi::rank(), mpi::min{}) == 0);
     }
-    // SECTION("Vector valued all reduce")
-    // {
-    //     std::vector<int> vec{{1, 1, 1}};
-    //     REQUIRE(mpi::all_reduce(vec, mpi::sum{}) == {mpi::size(), mpi::size(), mpi::size()});
-    //
-    //     REQUIRE(mpi::all_reduce(vec, mpi::prod{}) == {1, 1, 1});
-    //
-    //     REQUIRE(mpi::all_reduce(mpi::rank(), mpi::max{}) == mpi::size() - 1);
-    //
-    //     REQUIRE(mpi::all_reduce(mpi::rank(), mpi::min{}) == 0);
-    // }
+    SECTION("Vector valued all reduce")
+    {
+        std::vector<int> vec{{1, 1, 1}};
+
+        for (auto const& sum : mpi::all_reduce(vec, mpi::sum{}))
+        {
+            REQUIRE(sum == mpi::size());
+        }
+        for (auto const prod : mpi::all_reduce(vec, mpi::prod{}))
+        {
+            REQUIRE(prod == 1);
+        }
+
+        REQUIRE(mpi::all_reduce(mpi::rank(), mpi::max{}) == mpi::size() - 1);
+
+        REQUIRE(mpi::all_reduce(mpi::rank(), mpi::min{}) == 0);
+    }
+    SECTION("Scalar valued reduce")
+    {
+        auto const root_sum = mpi::reduce(1, mpi::sum{}, 1);
+        if (mpi::rank() == 1)
+        {
+            REQUIRE(root_sum == mpi::size());
+        }
+
+        auto const root_prod = mpi::reduce(1, mpi::prod{}, 1);
+        if (mpi::rank() == 1)
+        {
+            REQUIRE(root_prod == 1);
+        }
+
+        auto const root_max = mpi::reduce(mpi::rank(), mpi::max{}, 1);
+        if (mpi::rank() == 1)
+        {
+            REQUIRE(root_max == mpi::size() - 1);
+        }
+
+        auto const root_min = mpi::reduce(mpi::rank(), mpi::min{}, 1);
+        if (mpi::rank() == 1)
+        {
+            REQUIRE(root_min == 0);
+        }
+    }
+    SECTION("Vector valued reduce")
+    {
+        std::array<int, 2> array;
+        array.fill(mpi::rank());
+
+        auto const root_sum = mpi::reduce(array, mpi::sum{}, 1);
+        if (mpi::rank() == 1)
+        {
+            for (auto i : root_sum)
+            {
+                REQUIRE(i == 1);
+            }
+        }
+
+        auto const root_prod = mpi::reduce(array, mpi::prod{}, 1);
+        if (mpi::rank() == 1)
+        {
+            for (auto i : root_prod)
+            {
+                REQUIRE(i == 0);
+            }
+        }
+
+        auto const root_max = mpi::reduce(array, mpi::max{}, 1);
+        if (mpi::rank() == 1)
+        {
+            for (auto i : root_max)
+            {
+                REQUIRE(i == 1);
+            }
+        }
+
+        auto const root_min = mpi::reduce(array, mpi::min{}, 1);
+        if (mpi::rank() == 1)
+        {
+            for (auto i : root_min)
+            {
+                REQUIRE(i == 0);
+            }
+        }
+    }
 }
