@@ -1,7 +1,7 @@
 # mpi-bind
 Modern c++ bindings for MPI
 
-This was created due to the lack of c++ bindings in modern mpi.  C++ techniques such as SFINAE and template specialisation perform compile time checking and arguments are marked as `const` where applicable.  Namespaces are introduced and the style follows the standard library where possible.  There should be very little overhead for using these bindings.
+This was created due to the lack of c++ bindings in modern mpi.  C++ techniques such as SFINAE and template specialisation perform compile time checking and arguments are marked as `const` where applicable.  Namespaces are introduced and the style follows the standard library where possible.  There should be very little overhead when using these bindings.
 
 ## Usage
 
