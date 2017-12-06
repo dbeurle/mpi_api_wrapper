@@ -76,4 +76,21 @@ TEST_CASE("Point to point communication")
             REQUIRE(mpi::receive<long>(0) == 15l);
         }
     }
+    SECTION("integer vector")
+    {
+        if (mpi::rank() == 0)
+        {
+            mpi::send(std::vector<int>{0, 1, 2, 3, 4}, 1);
+        }
+        else if (mpi::rank() == 1)
+        {
+            auto const received_vector = mpi::receive<std::vector<int>>(0);
+
+            REQUIRE(received_vector.size() == 5);
+            for (auto i = 0; i < 5; i++)
+            {
+                REQUIRE(received_vector.at(i) == i);
+            }
+        }
+    }
 }
