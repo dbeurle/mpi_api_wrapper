@@ -120,9 +120,9 @@ template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value> send(
     T const send_value,
     int const destination_process,
+    int const message_tag = 0,
     communicator const comm = communicator::world)
 {
-    int message_tag = 0;
     MPI_Send(&send_value,
              1,
              data_type<T>::tag,
@@ -134,9 +134,9 @@ inline std::enable_if_t<std::is_arithmetic<T>::value> send(
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
     int const source_process,
+    int const message_tag = 0,
     communicator const comm = communicator::world)
 {
-    int message_tag = 0;
     T recieve_value;
 
     MPI_Recv(&recieve_value,
