@@ -111,6 +111,10 @@ struct data_type<bool>
     static auto constexpr tag = MPI_INT;
 };
 
+/*----------------------------------------------------------------------------*
+ *                         BLOCKING SEND RECEIVE                              *
+ *----------------------------------------------------------------------------*/
+
 /**
  * Perform an MPI send operation on types which are able to have primitive
  * operations defined on it.  This function call is only for scalar (primitive)
