@@ -25,13 +25,15 @@ When sending, the type of the argument is deduced and this passes it through to 
 auto const my_new_value = mpi::receive<long>(sending_processor_number);
 ```
 
-Which is unfortunate but required.  For sending a vector of data the syntax is 
+which is unfortunate but required.  One possibility is to use `decltype(variable)` to shelter the calls from type changes.  For receiving a vector of data the syntax is 
 
 ```cpp
 auto const my_new_vector = mpi::receive<std::vector<double>>(sending_processor_number);
 ```
 
-Full documentation will follow shortly.
+where the template parameter is now the vector return type. This will perform an `MPI_Probe` to determine the size and automatically resizes the buffer, fills with data and returns it from the function. 
+
+Full documentation will follow shortly, otherwise check out the unit tests.
 
 ## Contributions
 
