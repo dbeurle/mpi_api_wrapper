@@ -86,6 +86,12 @@ struct data_type<double>
 };
 
 template <>
+struct data_type<short>
+{
+    static auto constexpr tag = MPI_SHORT;
+};
+
+template <>
 struct data_type<int>
 {
     static auto constexpr tag = MPI_INT;
