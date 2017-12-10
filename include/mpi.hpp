@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <type_traits>
+#include <vector>
 
 #include <mpi.h>
 
@@ -22,6 +23,9 @@ enum class thread : int {
 
 /** Alias the status type for implementation independence */
 using status = MPI_Status;
+
+/** Alias the request type for implementation independence */
+using request = MPI_Request;
 
 /** @return The process number in the communicator */
 int rank(communicator const comm = communicator::world)
@@ -48,6 +52,10 @@ void barrier(communicator const comm = communicator::world)
 {
     MPI_Barrier(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 }
+
+/*----------------------------------------------------------------------------*
+ *                  Reduction operations for MPI data types                   *
+ *----------------------------------------------------------------------------*/
 
 struct sum
 {
@@ -124,8 +132,10 @@ struct data_type<bool>
  * values.
  */
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value> send(
-    T const send_value, int const destination_process, communicator const comm = communicator::world)
+inline std::enable_if_t<std::is_arithmetic<T>::value> send(T const send_value,
+                                                           int const destination_process,
+                                                           int const message_tag = 0,
+                                                           communicator const comm = communicator::world)
 {
     MPI_Send(&send_value,
              1,
@@ -156,7 +166,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
-    int const source_process, communicator const comm = communicator::world)
+    int const source_process, int const message_tag = 0, communicator const comm = communicator::world)
 {
     T recieve_value;
 
@@ -198,6 +208,93 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
              MPI_STATUS_IGNORE);
 
     return receive_buffer;
+}
+
+/*----------------------------------------------------------------------------*
+ *                        ASYNCHRONOUS SEND RECEIVE                           *
+ *----------------------------------------------------------------------------*/
+
+/**
+ * Perform an asynchronous MPI send operation on types which are able to have primitive
+ * operations defined on it.  This function call is only for scalar (primitive)
+ * values.
+ */
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<T>::value, request> send_async(
+    T const& send_async_value,
+    int const destination_process,
+    int const message_tag = 0,
+    communicator const comm = communicator::world)
+{
+    request async_send_request;
+
+    MPI_Isend(&send_async_value,
+              1,
+              data_type<T>::tag,
+              destination_process,
+              message_tag,
+              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
+              &async_send_request);
+
+    return async_send_request;
+}
+
+/**
+ * Perform an asynchronous MPI send operation on types which are able to have
+ * primitive operations defined on it.  This function call is only for vector types.
+ */
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, request> send_async(
+    T const& send_async_vector,
+    int const destination_process,
+    int const message_tag = 0,
+    communicator const comm = communicator::world)
+{
+    request async_send_request;
+
+    MPI_Isend(send_async_vector.data(),
+              send_async_vector.size(),
+              data_type<typename T::value_type>::tag,
+              destination_process,
+              message_tag,
+              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
+              &async_send_request);
+
+    return async_send_request;
+}
+
+/**
+ * Wait until the asynchronous send operation in request is finished.
+ * \sa request
+ * \sa status
+ * \sa wait_all
+ * @param async_request
+ * @return The status of the asynchronous operation
+ */
+inline status wait(request async_request)
+{
+    status wait_status;
+    MPI_Wait(&async_request, &wait_status);
+    return wait_status;
+}
+
+/**
+ * Wait until all the asynchronous send operation in requests is finished.
+ * \sa request
+ * \sa status
+ * \sa wait
+ * @param async_requests
+ * @return A vector of statuses of the asynchronous operation
+ */
+inline std::vector<status> wait_all(std::vector<request>& async_requests)
+{
+    int const count = async_requests.size();
+
+    std::vector<status> statuses(count);
+
+    MPI_Waitall(count, async_requests.data(), statuses.data());
+
+    return statuses;
 }
 
 /*----------------------------------------------------------------------------*
