@@ -89,6 +89,12 @@ struct data_type<double>
 };
 
 template <>
+struct data_type<short>
+{
+    static auto constexpr tag = MPI_SHORT;
+};
+
+template <>
 struct data_type<int>
 {
     static auto constexpr tag = MPI_INT;
@@ -108,6 +114,10 @@ struct data_type<bool>
     static auto constexpr tag = MPI_INT;
 };
 
+/*----------------------------------------------------------------------------*
+ *                         BLOCKING SEND RECEIVE                              *
+ *----------------------------------------------------------------------------*/
+
 /**
  * Perform an MPI send operation on types which are able to have primitive
  * operations defined on it.  This function call is only for scalar (primitive)
@@ -117,10 +127,28 @@ template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value> send(
     T const send_value, int const destination_process, communicator const comm = communicator::world)
 {
-    int message_tag = 0;
     MPI_Send(&send_value,
              1,
              data_type<T>::tag,
+             destination_process,
+             message_tag,
+             comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+}
+
+/**
+ * Perform an MPI send operation on types which are able to have primitive
+ * operations defined on it.  This function call is only for vector types.
+ */
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
+    T const& send_vector,
+    int const destination_process,
+    int const message_tag = 0,
+    communicator const comm = communicator::world)
+{
+    MPI_Send(send_vector.data(),
+             send_vector.size(),
+             data_type<typename T::value_type>::tag,
              destination_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -130,7 +158,6 @@ template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
     int const source_process, communicator const comm = communicator::world)
 {
-    int message_tag = 0;
     T recieve_value;
 
     MPI_Recv(&recieve_value,
@@ -142,6 +169,35 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
              MPI_STATUS_IGNORE);
 
     return recieve_value;
+}
+
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> receive(
+    int const source_process, int const message_tag = 0, communicator const comm = communicator::world)
+{
+    mpi::status probe_status;
+
+    // Probe for an incoming message from the sending process
+    MPI_Probe(source_process,
+              message_tag,
+              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
+              &probe_status);
+
+    int buffer_size;
+
+    MPI_Get_count(&probe_status, data_type<typename T::value_type>::tag, &buffer_size);
+
+    T receive_buffer(buffer_size);
+
+    MPI_Recv(receive_buffer.data(),
+             receive_buffer.size(),
+             data_type<typename T::value_type>::tag,
+             source_process,
+             message_tag,
+             comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
+             MPI_STATUS_IGNORE);
+
+    return receive_buffer;
 }
 
 /*----------------------------------------------------------------------------*
