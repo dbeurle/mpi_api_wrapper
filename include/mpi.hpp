@@ -28,8 +28,7 @@ int rank(communicator const comm = communicator::world)
 {
     int processor_rank;
 
-    MPI_Comm_rank(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
-                  &processor_rank);
+    MPI_Comm_rank(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF, &processor_rank);
 
     return processor_rank;
 }
@@ -69,6 +68,10 @@ struct prod
 {
     static auto constexpr tag = MPI_PROD;
 };
+
+/*----------------------------------------------------------------------------*
+ *               Template specialisations for MPI data types                  *
+ *----------------------------------------------------------------------------*/
 
 template <typename T>
 struct data_type;
@@ -112,9 +115,7 @@ struct data_type<bool>
  */
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value> send(
-    T const send_value,
-    int const destination_process,
-    communicator const comm = communicator::world)
+    T const send_value, int const destination_process, communicator const comm = communicator::world)
 {
     int message_tag = 0;
     MPI_Send(&send_value,
@@ -127,8 +128,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value> send(
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
-    int const source_process,
-    communicator const comm = communicator::world)
+    int const source_process, communicator const comm = communicator::world)
 {
     int message_tag = 0;
     T recieve_value;
@@ -161,9 +161,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
  */
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
-    T local_data,
-    int const host_processor = 0,
-    communicator const comm = communicator::world)
+    T local_data, int const host_processor = 0, communicator const comm = communicator::world)
 {
     MPI_Bcast(&local_data,
               1,
@@ -187,9 +185,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
  */
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> broadcast(
-    T local_data,
-    int const host_processor = 0,
-    communicator const comm = communicator::world)
+    T local_data, int const host_processor = 0, communicator const comm = communicator::world)
 {
     MPI_Bcast(local_data.data(),
               local_data.size(),
@@ -281,11 +277,11 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
 }
 
 /**
- * Perform an MPI Allreduce operation on a vector of types which are able to have
- * primitive operations defined on it.
+ * Perform an MPI Allreduce operation on a vector of types which are able to
+ * have primitive operations defined on it.
  *
- * This function allocates a vector of the same type and size of the input vector
- * and fills it with the result from the all_reduce operation
+ * This function allocates a vector of the same type and size of the input
+ * vector and fills it with the result from the all_reduce operation
  */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_reduce(
@@ -307,8 +303,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
-    T const local_data,
-    communicator const comm = communicator::world)
+    T const local_data, communicator const comm = communicator::world)
 {
     T collected_data(mpi::size(comm));
 
@@ -325,8 +320,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_to_all(
-    T const& local_data,
-    communicator const comm = communicator::world)
+    T const& local_data, communicator const comm = communicator::world)
 {
     T collected_data(local_data.size() * mpi::size(comm));
 
