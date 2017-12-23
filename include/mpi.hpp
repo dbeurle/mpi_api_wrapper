@@ -160,7 +160,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
     int const message_tag = 0,
     communicator const comm = communicator::world)
 {
-    MPI_Send(send_vector.data(),
+    MPI_Send(const_cast<typename T::value_type>(send_vector.data()),
              send_vector.size(),
              data_type<typename T::value_type>::value_type(),
              destination_process,
@@ -232,7 +232,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, request> send_async(
 {
     request async_send_request;
 
-    MPI_Isend(&send_async_value,
+    MPI_Isend(const_cast<T>(&send_async_value),
               1,
               data_type<T>::value_type(),
               destination_process,
@@ -256,7 +256,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, reque
 {
     request async_send_request;
 
-    MPI_Isend(send_async_vector.data(),
+    MPI_Isend(const_cast<typename T::value_type>(send_async_vector.data()),
               send_async_vector.size(),
               data_type<typename T::value_type>::value_type(),
               destination_process,
@@ -399,7 +399,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
 {
     T collected_data(local_data.size());
 
-    MPI_Reduce(local_data.data(),
+    MPI_Reduce(const_cast<typename T::value_type>(local_data.data()),
                collected_data.data(),
                local_data.size(),
                data_type<typename T::value_type>::value_type(),
