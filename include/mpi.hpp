@@ -417,9 +417,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
  */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
-    T const local_reduction_variable,
-    Operation_Tp&& operation,
-    communicator const comm = communicator::world)
+    T local_reduction_variable, Operation_Tp&& operation, communicator const comm = communicator::world)
 {
     T reduction_variable;
 
