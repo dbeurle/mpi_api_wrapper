@@ -19,5 +19,5 @@ before_script:
 script:
     - make -j2
 after_success:
-- ctest
+    - ctest
 #- if [[ "$CXX" =~ ^g.* ]]; then make coverage && coveralls --lcov-file coverage.info --no-gcov ; fi
