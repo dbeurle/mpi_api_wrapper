@@ -59,22 +59,22 @@ void barrier(communicator const comm = communicator::world)
 
 struct sum
 {
-    static auto constexpr tag = MPI_SUM;
+    MPI_Op const tag = MPI_SUM;
 };
 
 struct min
 {
-    static auto constexpr tag = MPI_MIN;
+    MPI_Op const tag = MPI_MIN;
 };
 
 struct max
 {
-    static auto constexpr tag = MPI_MAX;
+    MPI_Op const tag = MPI_MAX;
 };
 
 struct prod
 {
-    static auto constexpr tag = MPI_PROD;
+    MPI_Op const tag = MPI_PROD;
 };
 
 /*----------------------------------------------------------------------------*
