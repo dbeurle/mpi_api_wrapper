@@ -128,8 +128,6 @@ TEST_CASE("Point to point asynchronous communication")
         }
         else if (mpi::rank() == 1)
         {
-            // auto const data_to_recv = mpi::receive<std::vector<float>>(0);
-
             for (auto i : mpi::receive<std::vector<float>>(0))
             {
                 REQUIRE(i == Approx(3.14f));
@@ -153,8 +151,6 @@ TEST_CASE("Point to point asynchronous communication")
         }
         else if (mpi::rank() == 1)
         {
-            // auto const data_to_recv = mpi::receive<std::vector<int>>(0);
-
             auto j = 0;
             for (auto i : mpi::receive<std::vector<int>>(0))
             {
@@ -181,8 +177,6 @@ TEST_CASE("Point to point asynchronous communication")
         }
         else if (mpi::rank() == 1)
         {
-            // auto const data_to_recv = mpi::receive<std::vector<int>>(0);
-
             auto j = 0;
             for (auto i : mpi::receive<std::vector<int>>(0))
             {
