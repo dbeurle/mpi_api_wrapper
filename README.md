@@ -1,9 +1,9 @@
 # cppmpi
-Modern c++ bindings for MPI
+Modern MPI bindings for c++
 
-This was created due to the lack of c++ bindings in modern mpi.  Modern c++ techniques such as SFINAE and template specialisation perform compile time checking that results in a clean interface to the MPI C library.  Function arguments are marked as `const` where applicable to maintain const-correctness and helps to reduce the chance of something going wrong.
+This was created due to the lack of c++ bindings in modern mpi.  Modern c++ techniques such as SFINAE and template specialisation perform compile time checking that results in a clean interface to the MPI C library.  Function arguments are marked as `const` where applicable to maintain const-correctness and helps to reduce the chance of something going wrong.  Compared to the original c++ interface, this interface reduces the amount of work required.
 
-All functions are in the mpi namespace the function naming style follows the standard library where possible.  There should be very little overhead when using these bindings with compiler optimisations.
+All functions are in the `mpi` namespace the function naming style follows the standard library where possible.  There should be very little overhead when using these bindings with compiler optimisations.
 
 Currently `std::vector` is tested against these bindings and dynamic memory allocation will be performed inside the routines when not using a primative type (a single `int`, `float` etc).  This allows the return argument to me marked as const and reduces the possibilities for bugs in the code.
 
