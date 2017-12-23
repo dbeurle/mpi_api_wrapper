@@ -81,45 +81,49 @@ struct prod
  *               Template specialisations for MPI data types                  *
  *----------------------------------------------------------------------------*/
 
-template <typename T>
+template <class T>
 struct data_type;
+
+template <>
+struct data_type<int>
+{
+    static MPI_Datatype value_type() { return MPI_INT; }
+};
+
+template <>
+struct data_type<long int>
+{
+    static MPI_Datatype value_type() { return MPI_LONG_INT; }
+};
+
+template <>
+struct data_type<long long int>
+{
+    static MPI_Datatype value_type() { return MPI_LONG_LONG_INT; }
+};
+
+template <>
+struct data_type<char>
+{
+    static MPI_Datatype value_type() { return MPI_CHAR; }
+};
 
 template <>
 struct data_type<float>
 {
-    static auto constexpr tag = MPI_FLOAT;
+    static MPI_Datatype value_type() { return MPI_FLOAT; }
 };
 
 template <>
 struct data_type<double>
 {
-    static auto constexpr tag = MPI_DOUBLE;
+    static MPI_Datatype value_type() { return MPI_DOUBLE; }
 };
 
 template <>
-struct data_type<short>
+struct data_type<long double>
 {
-    static auto constexpr tag = MPI_SHORT;
-};
-
-template <>
-struct data_type<int>
-{
-    static auto constexpr tag = MPI_INT;
-};
-
-template <>
-struct data_type<long>
-{
-    static auto constexpr tag = MPI_LONG;
-};
-
-template <>
-struct data_type<bool>
-{
-    // BUG Will this work if std::vector<bool> packs booleans into an integer
-    // as the memcpy behind the scenes will probably copy too little
-    static auto constexpr tag = MPI_INT;
+    static MPI_Datatype value_type() { return MPI_LONG_DOUBLE; }
 };
 
 /*----------------------------------------------------------------------------*
@@ -139,7 +143,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value> send(T const send_value,
 {
     MPI_Send(&send_value,
              1,
-             data_type<T>::tag,
+             data_type<T>::value_type(),
              destination_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -158,7 +162,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
 {
     MPI_Send(send_vector.data(),
              send_vector.size(),
-             data_type<typename T::value_type>::tag,
+             data_type<typename T::value_type>::value_type(),
              destination_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -172,7 +176,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
 
     MPI_Recv(&recieve_value,
              1,
-             data_type<T>::tag,
+             data_type<T>::value_type(),
              source_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
@@ -195,13 +199,13 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
 
     int buffer_size;
 
-    MPI_Get_count(&probe_status, data_type<typename T::value_type>::tag, &buffer_size);
+    MPI_Get_count(&probe_status, data_type<typename T::value_type>::value_type(), &buffer_size);
 
     T receive_buffer(buffer_size);
 
     MPI_Recv(receive_buffer.data(),
              receive_buffer.size(),
-             data_type<typename T::value_type>::tag,
+             data_type<typename T::value_type>::value_type(),
              source_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
@@ -230,7 +234,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, request> send_async(
 
     MPI_Isend(&send_async_value,
               1,
-              data_type<T>::tag,
+              data_type<T>::value_type(),
               destination_process,
               message_tag,
               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
@@ -254,7 +258,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, reque
 
     MPI_Isend(send_async_vector.data(),
               send_async_vector.size(),
-              data_type<typename T::value_type>::tag,
+              data_type<typename T::value_type>::value_type(),
               destination_process,
               message_tag,
               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
@@ -318,7 +322,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
 {
     MPI_Bcast(&local_data,
               1,
-              data_type<T>::tag,
+              data_type<T>::value_type(),
               host_processor,
               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -342,7 +346,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> br
 {
     MPI_Bcast(local_data.data(),
               local_data.size(),
-              data_type<typename T::value_type>::tag,
+              data_type<typename T::value_type>::value_type(),
               host_processor,
               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -372,7 +376,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
     MPI_Reduce(&local_data,
                &collected_data,
                1,
-               data_type<T>::tag,
+               data_type<T>::value_type(),
                operation_type.tag,
                host_processor,
                comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -398,7 +402,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
     MPI_Reduce(local_data.data(),
                collected_data.data(),
                local_data.size(),
-               data_type<typename T::value_type>::tag,
+               data_type<typename T::value_type>::value_type(),
                operation_type.tag,
                host_processor,
                comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -422,7 +426,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
     MPI_Allreduce(&local_reduction_variable,
                   &reduction_variable,
                   1,
-                  data_type<T>::tag,
+                  data_type<T>::value_type(),
                   operation.tag,
                   comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -447,7 +451,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
     MPI_Allreduce(local_reduction_variable.data(),
                   reduction_variable.data(),
                   reduction_variable.size(),
-                  data_type<typename T::value_type>::tag,
+                  data_type<typename T::value_type>::value_type(),
                   operation.tag,
                   comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -462,10 +466,10 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
 
     MPI_Alltoall(&local_data,
                  1,
-                 data_type<T>::tag,
+                 data_type<T>::value_type(),
                  collected_data.data(),
                  collected_data.size(),
-                 data_type<T>::tag,
+                 data_type<T>::value_type(),
                  comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
     return collected_data;
@@ -479,10 +483,10 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 
     MPI_Alltoall(local_data.data(),
                  local_data.size(),
-                 data_type<typename T::value_type>::tag,
+                 data_type<typename T::value_type>::value_type(),
                  collected_data.data(),
                  collected_data.size(),
-                 data_type<typename T::value_type>::tag,
+                 data_type<typename T::value_type>::value_type(),
                  comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
     return collected_data;
