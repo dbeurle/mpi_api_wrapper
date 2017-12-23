@@ -136,7 +136,7 @@ struct data_type<long double>
  * values.
  */
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value> send(T const send_value,
+inline std::enable_if_t<std::is_arithmetic<T>::value> send(T send_value,
                                                            int const destination_process,
                                                            int const message_tag = 0,
                                                            communicator const comm = communicator::world)
@@ -366,7 +366,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> br
  */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
-    T const local_data,
+    T local_data,
     Operation_Tp&& operation_type,
     int const host_processor = 0,
     communicator const comm = communicator::world)
@@ -446,7 +446,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 {
     T reduction_variable(local_reduction_variable.size());
 
-    MPI_Allreduce(local_reduction_variable.data(),
+    MPI_Allreduce(const_cast<typename T::value_type*>(local_reduction_variable.data()),
                   reduction_variable.data(),
                   reduction_variable.size(),
                   data_type<typename T::value_type>::value_type(),
@@ -458,7 +458,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
-    T const local_data, communicator const comm = communicator::world)
+    T local_data, communicator const comm = communicator::world)
 {
     T collected_data(mpi::size(comm));
 
@@ -479,7 +479,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 {
     T collected_data(local_data.size() * mpi::size(comm));
 
-    MPI_Alltoall(local_data.data(),
+    MPI_Alltoall(const_cast<typename T::value_type*>(local_data.data()),
                  local_data.size(),
                  data_type<typename T::value_type>::value_type(),
                  collected_data.data(),
