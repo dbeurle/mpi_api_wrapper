@@ -10,13 +10,13 @@ before_install:
     - echo "yes" | sudo add-apt-repository 'deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.9 main'
     - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
     - sudo apt-get -qq update
-    - sudo apt-get install -y g++-6 lcov clang-3.9 libgcc-6-dev libopenmpi-dev
+    - sudo apt-get install -y lcov g++-6 libgcc-6-dev libopenmpi-dev
     - pip install --user cpp-coveralls
 before_script:
     - mkdir build
     - cd build
-    - if [[ "$CXX" == "g++" ]]; then CXX=g++-6 cmake -DENABLE_COVERAGE=TRUE ..; fi
-    - if [[ "$CXX" == "clang++" ]]; then CXX=clang++-3.9 cmake ..; fi
+    - if [[ "$CXX" == "g++" ]]; then cmake ..; fi
+    - if [[ "$CXX" == "clang++" ]]; then cmake ..; fi
 script:
     - make -j2
     - ctest
