@@ -15,8 +15,8 @@ before_install:
 before_script:
     - mkdir build
     - cd build
-    - if [[ "$CXX" == "g++" ]]; then CXX=g++ cmake -DENABLE_COVERAGE=TRUE ..; fi
-    - if [[ "$CXX" == "clang++" ]]; then CXX=clang++ cmake ..; fi
+    - if [[ "$CXX" == "g++" ]]; then cmake ..; fi
+    - if [[ "$CXX" == "clang++" ]]; then cmake ..; fi
 script:
     - make -j2
     - ctest
