@@ -14,7 +14,7 @@ before_install:
 before_script:
     - mkdir build
     - cd build
-    - if [[ "$CXX" == "g++" ]]; then cmake ..; fi
+    - if [[ "$CXX" == "g++" ]]; then export CXX=g++-6; export CC=gcc-6; cmake ..; fi
     - if [[ "$CXX" == "clang++" ]]; then cmake ..; fi
 script:
     - make -j2
