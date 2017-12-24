@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dbeurle/cppmpi.svg?branch=master)](https://travis-ci.org/dbeurle/cppmpi)
+
 # cppmpi
 Modern MPI bindings for c++
 
