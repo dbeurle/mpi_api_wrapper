@@ -37,7 +37,7 @@ TEST_CASE("Point to point synchronous communication")
     {
         if (mpi::rank() == 0)
         {
-            mpi::send(2.157864f, 1);
+            mpi::send(mpi::blocking{}, 2.157864f, 1);
         }
         else if (mpi::rank() == 1)
         {
@@ -48,7 +48,7 @@ TEST_CASE("Point to point synchronous communication")
     {
         if (mpi::rank() == 0)
         {
-            mpi::send(2.157864, 1);
+            mpi::send(mpi::blocking{}, 2.157864, 1);
         }
         else if (mpi::rank() == 1)
         {
@@ -59,7 +59,7 @@ TEST_CASE("Point to point synchronous communication")
     {
         if (mpi::rank() == 0)
         {
-            mpi::send(15, 1);
+            mpi::send(mpi::blocking{}, 15, 1);
         }
         else if (mpi::rank() == 1)
         {
@@ -70,7 +70,7 @@ TEST_CASE("Point to point synchronous communication")
     {
         if (mpi::rank() == 0)
         {
-            mpi::send(15l, 1);
+            mpi::send(mpi::blocking{}, 15l, 1);
         }
         else if (mpi::rank() == 1)
         {
@@ -81,7 +81,7 @@ TEST_CASE("Point to point synchronous communication")
     {
         if (mpi::rank() == 0)
         {
-            mpi::send(std::vector<int>{0, 1, 2, 3, 4}, 1);
+            mpi::send(mpi::blocking{}, std::vector<int>{0, 1, 2, 3, 4}, 1);
         }
         else if (mpi::rank() == 1)
         {
@@ -101,7 +101,7 @@ TEST_CASE("Point to point asynchronous communication")
     {
         if (mpi::rank() == 0)
         {
-            auto const request = mpi::send_async(2.157864f, 1);
+            auto const request = mpi::send(mpi::async{}, 2.157864f, 1);
 
             // Computation happens here
 
@@ -118,7 +118,7 @@ TEST_CASE("Point to point asynchronous communication")
         {
             std::vector<float> data_to_send(10, 3.14f);
 
-            auto const request = mpi::send_async(data_to_send, 1);
+            auto const request = mpi::send(mpi::async{}, data_to_send, 1);
 
             // Computation happens here
 
@@ -141,7 +141,7 @@ TEST_CASE("Point to point asynchronous communication")
             std::vector<int> data_to_send(10);
             std::iota(std::begin(data_to_send), std::end(data_to_send), 0);
 
-            auto const request = mpi::send_async(data_to_send, 1);
+            auto const request = mpi::send(mpi::async{}, data_to_send, 1);
 
             // Computation happens here
 
@@ -167,7 +167,7 @@ TEST_CASE("Point to point asynchronous communication")
 
             std::vector<mpi::request> requests;
 
-            requests.emplace_back(mpi::send_async(data_to_send, 1));
+            requests.emplace_back(mpi::send(mpi::async{}, data_to_send, 1));
 
             // Computation happens here
 

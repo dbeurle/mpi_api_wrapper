@@ -127,7 +127,27 @@ struct data_type<long double>
 };
 
 /*----------------------------------------------------------------------------*
- *                         BLOCKING SEND RECEIVE                              *
+ *                              Synchronous types                             *
+ *----------------------------------------------------------------------------*/
+
+/** blocking is a tag that will not return until the buffer is safe to reuse */
+struct blocking
+{
+};
+
+/**
+ * async will send data as it pleases from the input buffer.  This buffer
+ * cannot be used until a wait has been called to ensure data transfer is
+ * complete
+ * \sa wait_all
+ * \sa wait
+ */
+struct async
+{
+};
+
+/*----------------------------------------------------------------------------*
+ *                               SEND RECEIVE                                 *
  *----------------------------------------------------------------------------*/
 
 /**
@@ -136,7 +156,8 @@ struct data_type<long double>
  * values.
  */
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value> send(T send_value,
+inline std::enable_if_t<std::is_arithmetic<T>::value> send(blocking,
+                                                           T send_value,
                                                            int const destination_process,
                                                            int const message_tag = 0,
                                                            communicator const comm = communicator::world)
@@ -155,6 +176,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value> send(T send_value,
  */
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
+    blocking,
     T const& send_vector,
     int const destination_process,
     int const message_tag = 0,
@@ -224,7 +246,8 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
  * values.
  */
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value, request> send_async(
+inline std::enable_if_t<std::is_arithmetic<T>::value, request> send(
+    async,
     T const& send_async_value,
     int const destination_process,
     int const message_tag = 0,
@@ -248,7 +271,8 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, request> send_async(
  * primitive operations defined on it.  This function call is only for vector types.
  */
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, request> send_async(
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, request> send(
+    async,
     T const& send_async_vector,
     int const destination_process,
     int const message_tag = 0,
