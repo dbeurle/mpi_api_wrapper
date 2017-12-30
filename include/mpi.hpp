@@ -514,7 +514,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
     return collected_data;
 }
 
-thread initialise(int argc, char** argv, thread const thread_required)
+inline thread initialise(int argc, char** argv, thread const thread_required)
 {
     // MPI thread level provided
     auto thread_provided = static_cast<int>(thread_required);
@@ -524,9 +524,9 @@ thread initialise(int argc, char** argv, thread const thread_required)
     return static_cast<thread>(thread_provided);
 }
 
-void initialise(int argc, char** argv) { MPI_Init(&argc, &argv); }
+inline void initialise(int argc, char** argv) { MPI_Init(&argc, &argv); }
 
-void finalise() { MPI_Finalize(); }
+inline void finalise() { MPI_Finalize(); }
 
 /**
  * Creates an instance of the MPI environment, automatically handling the
