@@ -48,7 +48,7 @@ inline int size(communicator const comm = communicator::world)
     return number_of_processors;
 }
 
-void barrier(communicator const comm = communicator::world)
+inline void barrier(communicator const comm = communicator::world)
 {
     MPI_Barrier(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 }
