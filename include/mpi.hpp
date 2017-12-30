@@ -24,7 +24,7 @@ enum class thread : int {
 using status = MPI_Status;
 
 /** @return The process number in the communicator */
-int rank(communicator const comm = communicator::world)
+inline int rank(communicator const comm = communicator::world)
 {
     int processor_rank;
 
@@ -35,7 +35,7 @@ int rank(communicator const comm = communicator::world)
 }
 
 /** @return The number of processors in the communicator */
-int size(communicator const comm = communicator::world)
+inline int size(communicator const comm = communicator::world)
 {
     int number_of_processors;
 
