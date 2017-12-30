@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <type_traits>
+#include <vector>
 
 #include <mpi.h>
 
@@ -23,13 +24,15 @@ enum class thread : int {
 /** Alias the status type for implementation independence */
 using status = MPI_Status;
 
+/** Alias the request type for implementation independence */
+using request = MPI_Request;
+
 /** @return The process number in the communicator */
 inline int rank(communicator const comm = communicator::world)
 {
     int processor_rank;
 
-    MPI_Comm_rank(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
-                  &processor_rank);
+    MPI_Comm_rank(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF, &processor_rank);
 
     return processor_rank;
 }
@@ -50,69 +53,101 @@ void barrier(communicator const comm = communicator::world)
     MPI_Barrier(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 }
 
+/*----------------------------------------------------------------------------*
+ *                  Reduction operations for MPI data types                   *
+ *----------------------------------------------------------------------------*/
+
 struct sum
 {
-    static auto constexpr tag = MPI_SUM;
+    MPI_Op const tag = MPI_SUM;
 };
 
 struct min
 {
-    static auto constexpr tag = MPI_MIN;
+    MPI_Op const tag = MPI_MIN;
 };
 
 struct max
 {
-    static auto constexpr tag = MPI_MAX;
+    MPI_Op const tag = MPI_MAX;
 };
 
 struct prod
 {
-    static auto constexpr tag = MPI_PROD;
+    MPI_Op const tag = MPI_PROD;
 };
 
-template <typename T>
+/*----------------------------------------------------------------------------*
+ *               Template specialisations for MPI data types                  *
+ *----------------------------------------------------------------------------*/
+
+template <class T>
 struct data_type;
+
+template <>
+struct data_type<int>
+{
+    static MPI_Datatype value_type() { return MPI_INT; }
+};
+
+template <>
+struct data_type<long int>
+{
+    static MPI_Datatype value_type() { return MPI_LONG_INT; }
+};
+
+template <>
+struct data_type<long long int>
+{
+    static MPI_Datatype value_type() { return MPI_LONG_LONG_INT; }
+};
+
+template <>
+struct data_type<char>
+{
+    static MPI_Datatype value_type() { return MPI_CHAR; }
+};
 
 template <>
 struct data_type<float>
 {
-    static auto constexpr tag = MPI_FLOAT;
+    static MPI_Datatype value_type() { return MPI_FLOAT; }
 };
 
 template <>
 struct data_type<double>
 {
-    static auto constexpr tag = MPI_DOUBLE;
+    static MPI_Datatype value_type() { return MPI_DOUBLE; }
 };
 
 template <>
-struct data_type<short>
+struct data_type<long double>
 {
-    static auto constexpr tag = MPI_SHORT;
-};
-
-template <>
-struct data_type<int>
-{
-    static auto constexpr tag = MPI_INT;
-};
-
-template <>
-struct data_type<long>
-{
-    static auto constexpr tag = MPI_LONG;
-};
-
-template <>
-struct data_type<bool>
-{
-    // BUG Will this work if std::vector<bool> packs booleans into an integer
-    // as the memcpy behind the scenes will probably copy too little
-    static auto constexpr tag = MPI_INT;
+    static MPI_Datatype value_type() { return MPI_LONG_DOUBLE; }
 };
 
 /*----------------------------------------------------------------------------*
- *                         BLOCKING SEND RECEIVE                              *
+ *                              Synchronous types                             *
+ *----------------------------------------------------------------------------*/
+
+/** blocking is a tag that will not return until the buffer is safe to reuse */
+struct blocking
+{
+};
+
+/**
+ * async will send data as it pleases from the input buffer.  This buffer
+ * cannot be used until a wait has been called to ensure data transfer is
+ * complete
+ * \sa wait_all
+ * \sa wait
+ */
+struct async
+{
+};
+
+/*----------------------------------------------------------------------------*
+ *                               SEND RECEIVE                                 *
  *----------------------------------------------------------------------------*/
 
 /**
@@ -121,15 +156,15 @@ struct data_type<bool>
  * values.
  */
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value> send(
-    T const send_value,
-    int const destination_process,
-    int const message_tag = 0,
-    communicator const comm = communicator::world)
+inline std::enable_if_t<std::is_arithmetic<T>::value> send(blocking,
+                                                           T send_value,
+                                                           int const destination_process,
+                                                           int const message_tag = 0,
+                                                           communicator const comm = communicator::world)
 {
     MPI_Send(&send_value,
              1,
-             data_type<T>::tag,
+             data_type<T>::value_type(),
              destination_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -141,14 +176,15 @@ inline std::enable_if_t<std::is_arithmetic<T>::value> send(
  */
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
+    blocking,
     T const& send_vector,
     int const destination_process,
     int const message_tag = 0,
     communicator const comm = communicator::world)
 {
-    MPI_Send(send_vector.data(),
+    MPI_Send(const_cast<typename T::value_type*>(send_vector.data()),
              send_vector.size(),
-             data_type<typename T::value_type>::tag,
+             data_type<typename T::value_type>::value_type(),
              destination_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -156,15 +192,13 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
-    int const source_process,
-    int const message_tag = 0,
-    communicator const comm = communicator::world)
+    int const source_process, int const message_tag = 0, communicator const comm = communicator::world)
 {
     T recieve_value;
 
     MPI_Recv(&recieve_value,
              1,
-             data_type<T>::tag,
+             data_type<T>::value_type(),
              source_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
@@ -175,9 +209,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> receive(
-    int const source_process,
-    int const message_tag = 0,
-    communicator const comm = communicator::world)
+    int const source_process, int const message_tag = 0, communicator const comm = communicator::world)
 {
     mpi::status probe_status;
 
@@ -189,19 +221,108 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
 
     int buffer_size;
 
-    MPI_Get_count(&probe_status, data_type<typename T::value_type>::tag, &buffer_size);
+    MPI_Get_count(&probe_status, data_type<typename T::value_type>::value_type(), &buffer_size);
 
     T receive_buffer(buffer_size);
 
     MPI_Recv(receive_buffer.data(),
              receive_buffer.size(),
-             data_type<typename T::value_type>::tag,
+             data_type<typename T::value_type>::value_type(),
              source_process,
              message_tag,
              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
              MPI_STATUS_IGNORE);
 
     return receive_buffer;
+}
+
+/*----------------------------------------------------------------------------*
+ *                        ASYNCHRONOUS SEND RECEIVE                           *
+ *----------------------------------------------------------------------------*/
+
+/**
+ * Perform an asynchronous MPI send operation on types which are able to have primitive
+ * operations defined on it.  This function call is only for scalar (primitive)
+ * values.
+ */
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<T>::value, request> send(
+    async,
+    T const& send_async_value,
+    int const destination_process,
+    int const message_tag = 0,
+    communicator const comm = communicator::world)
+{
+    request async_send_request;
+
+    MPI_Isend(const_cast<T*>(&send_async_value),
+              1,
+              data_type<T>::value_type(),
+              destination_process,
+              message_tag,
+              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
+              &async_send_request);
+
+    return async_send_request;
+}
+
+/**
+ * Perform an asynchronous MPI send operation on types which are able to have
+ * primitive operations defined on it.  This function call is only for vector types.
+ */
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, request> send(
+    async,
+    T const& send_async_vector,
+    int const destination_process,
+    int const message_tag = 0,
+    communicator const comm = communicator::world)
+{
+    request async_send_request;
+
+    MPI_Isend(const_cast<typename T::value_type*>(send_async_vector.data()),
+              send_async_vector.size(),
+              data_type<typename T::value_type>::value_type(),
+              destination_process,
+              message_tag,
+              comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF,
+              &async_send_request);
+
+    return async_send_request;
+}
+
+/**
+ * Wait until the asynchronous send operation in request is finished.
+ * \sa request
+ * \sa status
+ * \sa wait_all
+ * @param async_request
+ * @return The status of the asynchronous operation
+ */
+inline status wait(request async_request)
+{
+    status wait_status;
+    MPI_Wait(&async_request, &wait_status);
+    return wait_status;
+}
+
+/**
+ * Wait until all the asynchronous send operation in requests is finished.
+ * \sa request
+ * \sa status
+ * \sa wait
+ * @param async_requests
+ * @return A vector of statuses of the asynchronous operation
+ */
+inline std::vector<status> wait_all(std::vector<request>& async_requests)
+{
+    int const count = async_requests.size();
+
+    std::vector<status> statuses(count);
+
+    MPI_Waitall(count, async_requests.data(), statuses.data());
+
+    return statuses;
 }
 
 /*----------------------------------------------------------------------------*
@@ -221,13 +342,11 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
  */
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
-    T local_data,
-    int const host_processor = 0,
-    communicator const comm = communicator::world)
+    T local_data, int const host_processor = 0, communicator const comm = communicator::world)
 {
     MPI_Bcast(&local_data,
               1,
-              data_type<T>::tag,
+              data_type<T>::value_type(),
               host_processor,
               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -247,13 +366,11 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
  */
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> broadcast(
-    T local_data,
-    int const host_processor = 0,
-    communicator const comm = communicator::world)
+    T local_data, int const host_processor = 0, communicator const comm = communicator::world)
 {
     MPI_Bcast(local_data.data(),
               local_data.size(),
-              data_type<typename T::value_type>::tag,
+              data_type<typename T::value_type>::value_type(),
               host_processor,
               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -273,7 +390,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> br
  */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
-    T const local_data,
+    T local_data,
     Operation_Tp&& operation_type,
     int const host_processor = 0,
     communicator const comm = communicator::world)
@@ -283,7 +400,7 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
     MPI_Reduce(&local_data,
                &collected_data,
                1,
-               data_type<T>::tag,
+               data_type<T>::value_type(),
                operation_type.tag,
                host_processor,
                comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -306,10 +423,10 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
 {
     T collected_data(local_data.size());
 
-    MPI_Reduce(local_data.data(),
+    MPI_Reduce(const_cast<typename T::value_type*>(local_data.data()),
                collected_data.data(),
                local_data.size(),
-               data_type<typename T::value_type>::tag,
+               data_type<typename T::value_type>::value_type(),
                operation_type.tag,
                host_processor,
                comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
@@ -324,16 +441,14 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
  */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
-    T const local_reduction_variable,
-    Operation_Tp&& operation,
-    communicator const comm = communicator::world)
+    T local_reduction_variable, Operation_Tp&& operation, communicator const comm = communicator::world)
 {
     T reduction_variable;
 
     MPI_Allreduce(&local_reduction_variable,
                   &reduction_variable,
                   1,
-                  data_type<T>::tag,
+                  data_type<T>::value_type(),
                   operation.tag,
                   comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -341,11 +456,11 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
 }
 
 /**
- * Perform an MPI Allreduce operation on a vector of types which are able to have
- * primitive operations defined on it.
+ * Perform an MPI Allreduce operation on a vector of types which are able to
+ * have primitive operations defined on it.
  *
- * This function allocates a vector of the same type and size of the input vector
- * and fills it with the result from the all_reduce operation
+ * This function allocates a vector of the same type and size of the input
+ * vector and fills it with the result from the all_reduce operation
  */
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_reduce(
@@ -355,10 +470,10 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 {
     T reduction_variable(local_reduction_variable.size());
 
-    MPI_Allreduce(local_reduction_variable.data(),
+    MPI_Allreduce(const_cast<typename T::value_type*>(local_reduction_variable.data()),
                   reduction_variable.data(),
                   reduction_variable.size(),
-                  data_type<typename T::value_type>::tag,
+                  data_type<typename T::value_type>::value_type(),
                   operation.tag,
                   comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
@@ -367,17 +482,16 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
-    T const local_data,
-    communicator const comm = communicator::world)
+    T local_data, communicator const comm = communicator::world)
 {
     T collected_data(mpi::size(comm));
 
     MPI_Alltoall(&local_data,
                  1,
-                 data_type<T>::tag,
+                 data_type<T>::value_type(),
                  collected_data.data(),
                  collected_data.size(),
-                 data_type<T>::tag,
+                 data_type<T>::value_type(),
                  comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
     return collected_data;
@@ -385,17 +499,16 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_to_all(
-    T const& local_data,
-    communicator const comm = communicator::world)
+    T const& local_data, communicator const comm = communicator::world)
 {
     T collected_data(local_data.size() * mpi::size(comm));
 
-    MPI_Alltoall(local_data.data(),
+    MPI_Alltoall(const_cast<typename T::value_type*>(local_data.data()),
                  local_data.size(),
-                 data_type<typename T::value_type>::tag,
+                 data_type<typename T::value_type>::value_type(),
                  collected_data.data(),
                  collected_data.size(),
-                 data_type<typename T::value_type>::tag,
+                 data_type<typename T::value_type>::value_type(),
                  comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
 
     return collected_data;
