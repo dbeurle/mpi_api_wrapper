@@ -528,10 +528,13 @@ inline void initialise(int argc, char** argv) { MPI_Init(&argc, &argv); }
 
 inline void finalise() { MPI_Finalize(); }
 
+inline void abort() { MPI_Abort(); }
+
 /**
  * Creates an instance of the MPI environment, automatically handling the
  * initialisation and destruction of the MPI environment.  Calls to
- * MPI_init and MPI_finalize are no longer required.
+ * MPI_Init and MPI_Finalize are no longer required as these are handled by the
+ * class constructor and destructor.
  */
 class instance
 {
