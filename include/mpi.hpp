@@ -528,7 +528,10 @@ inline void initialise(int argc, char** argv) { MPI_Init(&argc, &argv); }
 
 inline void finalise() { MPI_Finalize(); }
 
-inline void abort() { MPI_Abort(); }
+inline void abort(int const error_code, communicator const comm = communicator::world)
+{
+    MPI_Abort(comm, error_code);
+}
 
 /**
  * Creates an instance of the MPI environment, automatically handling the
