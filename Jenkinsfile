@@ -2,6 +2,7 @@ pipeline {
   agent {
     docker {
       image 'fedora:27'
+      args '-v /tmp:/tmp'
     }
     
   }
