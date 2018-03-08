@@ -1,7 +1,7 @@
 pipeline {
   agent {
     docker {
-      image 'fedora:latest'
+      image 'fedora:27'
     }
     
   }
