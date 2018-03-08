@@ -1,5 +1,10 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'fedora'
+    }
+    
+  }
   stages {
     stage('print_garbage') {
       steps {
