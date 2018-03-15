@@ -9,8 +9,8 @@ To maintain consistency with the standard C++ library, the project mimics the na
 
 Please note that due to limited developer resources, not all functions will be wrapped.  However, if you feel that there is a missing feature please open an issue.
 
-Guide
-^^^^^
+Contents
+========
 
 .. toctree::
    :maxdepth: 2

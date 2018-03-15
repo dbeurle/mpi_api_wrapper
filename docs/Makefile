@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = cppmpi
+SPHINXPROJ    = mpi_api_wrapper
 SOURCEDIR     = source
 BUILDDIR      = build
 
