@@ -1,6 +1,8 @@
 [![Build Status](https://travis-ci.org/dbeurle/cppmpi.svg?branch=master)](https://travis-ci.org/dbeurle/cppmpi)
 
-# cppmpi
+[![Documentation Status](https://readthedocs.org/projects/cppmpi/badge/?version=latest)](http://cppmpi.readthedocs.io/en/latest/?badge=latest)
+
+# mpi_api_wrapper
 Modern MPI bindings for c++
 
 This was created due to the lack of c++ bindings in modern mpi.  Modern c++ techniques such as SFINAE and template specialisation perform compile time checking that results in a clean interface to the MPI C library.  Function arguments are marked as `const` where applicable to maintain const-correctness and helps to reduce the chance of something going wrong.  Compared to the original c++ interface, this interface reduces the amount of work required.
@@ -27,13 +29,13 @@ When sending, the type of the argument is deduced and this passes it through to 
 auto const my_new_value = mpi::receive<long>(sending_processor_number);
 ```
 
-which is unfortunate but required.  One possibility is to use `decltype(variable)` to shelter the calls from type changes.  For receiving a vector of data the syntax is 
+which is unfortunate but required.  One possibility is to use `decltype(variable)` to shelter the calls from type changes.  For receiving a vector of data the syntax is
 
 ```cpp
 auto const my_new_vector = mpi::receive<std::vector<double>>(sending_processor_number);
 ```
 
-where the template parameter is now the vector return type. This will perform an `MPI_Probe` to determine the size and automatically resizes the buffer, fills with data and returns it from the function. 
+where the template parameter is now the vector return type. This will perform an `MPI_Probe` to determine the size and automatically resizes the buffer, fills with data and returns it from the function.
 
 Full documentation will follow shortly, otherwise check out the unit tests.
 
