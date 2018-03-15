@@ -530,7 +530,7 @@ inline void finalise() { MPI_Finalize(); }
 
 inline void abort(int const error_code, communicator const comm = communicator::world)
 {
-    MPI_Abort(comm, error_code);
+    MPI_Abort(comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF, error_code);
 }
 
 /**
