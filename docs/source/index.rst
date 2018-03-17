@@ -17,6 +17,7 @@ Contents
 
    quickstart
    license
+   contact
 
 Indices and tables
 ==================
