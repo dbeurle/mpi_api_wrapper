@@ -1,4 +1,4 @@
-Quick start
+Introduction
 ============
 
 The easiest way to use this library is to read the documentation and checkout the test examples.  However, a quick demonstration of the code for an all reduce operation of a single scalar is::

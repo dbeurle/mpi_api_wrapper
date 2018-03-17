@@ -5,9 +5,9 @@ This project aims to provide a C++ interface to the MPI C library.  The official
 
 A more natural interface is achieved through the use of advanced C++ features that perform the correct type checks, enforce ``const`` correctness and reduces the number of errors associated with using the MPI C bindings.
 
-To maintain consistency with the standard C++ library, the project mimics the naming conventions and aims to provide a zero-cost abstraction on top of the C bindings.  It is important to note that some function names will change to be clearer and their MPI C equivalents will be noted.
+To maintain consistency with the standard C++ library, the project mimics the naming conventions and aims to provide a zero-cost abstraction on top of the C bindings.  It is important to note that some function names will change to be clearer and their MPI C equivalents will be noted or obvious from the name.
 
-Please note that due to limited developer resources, not all functions will be wrapped.  However, if you feel that there is a missing feature please open an issue.
+Please note that due to limited developer resources, not all functions will be wrapped but will happily be included on a user request.  If you feel that there is a missing feature please open an issue on the issue tracker.
 
 Contents
 ========
@@ -15,9 +15,11 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   quickstart
+   introduction
    instance
    send_receive
+   reduction
+   broadcast
    license
    contact
 

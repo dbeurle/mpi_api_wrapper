@@ -27,4 +27,4 @@ For a non-blocking send of a value of 1.0 to process 1 ::
 
     // Phew now it's safe to overwrite value
 
-These methods are generic enough to extend naturally to a ``std::vector<T>`` class, or any contiguous storage type that has a ``.resize(entries)`` and a ``T::value_type`` type alias.  Compile-time errors will be produced if the type is not a primitive type such as ``int``, ``double`` etc.
+These methods are generic enough to extend naturally to a ``std::vector<T>`` class, or any contiguous storage type that has a ``.resize(entries)`` method and a ``T::value_type`` type alias.  Compile-time errors will be produced if the type is not a primitive type such as ``int``, ``double`` etc.
