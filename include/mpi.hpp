@@ -18,8 +18,8 @@ enum class communicator { world, self };
 //! The types of threading models allowed in MPI
 enum class thread : int {
     single = MPI_THREAD_SINGLE,
-    funneled = MPI_THREAD_FUNNELED,
-    serialized = MPI_THREAD_SERIALIZED,
+    funnelled = MPI_THREAD_FUNNELED,
+    serialised = MPI_THREAD_SERIALIZED,
     multiple = MPI_THREAD_MULTIPLE
 };
 
@@ -594,10 +594,10 @@ public:
                 case mpi::thread::single:
                     std::cout << "MPI_Init_thread level = MPI_THREAD_SINGLE\n";
                     break;
-                case mpi::thread::funneled:
+                case mpi::thread::funnelled:
                     std::cout << "MPI_Init_thread level = MPI_THREAD_FUNNELED\n";
                     break;
-                case mpi::thread::serialized:
+                case mpi::thread::serialised:
                     std::cout << "MPI_Init_thread level = MPI_THREAD_SERIALIZED\n";
                     break;
                 case mpi::thread::multiple:
