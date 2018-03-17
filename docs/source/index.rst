@@ -16,6 +16,8 @@ Contents
    :maxdepth: 2
 
    quickstart
+   instance
+   send_receive
    license
    contact
 

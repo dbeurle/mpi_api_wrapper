@@ -13,6 +13,10 @@ The easiest way to use this library is to read the documentation and checkout th
 
 where the count and type are specified when they could be deduced.  If we pass a scalar value, then we know the count is 1 and the type is already given by the ``sum`` and ``local_sum`` variable.  If the ``MPI_SUM`` variable or the ``MPI_DOUBLE`` is specified incorrectly, there will be a silent error.  Instead, we write::
 
+    mpi::instance instance(argc, argv);
+
     auto const total_sum = mpi::all_reduce(my_local_sum, mpi::sum{});
+
+    // When instance is out of scope MPI_Finalize() is automatically called
 
 where the sum is a return value from the function can then be made ``const`` in contrast to the C interface.  Here the function defaults the ``communicator`` to the world type based on the implementation.
