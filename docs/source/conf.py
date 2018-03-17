@@ -29,7 +29,12 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+# extensions = ['breathe', 'sphinx.ext.mathjax']
 extensions = ['sphinx.ext.mathjax']
+
+# breathe_projects = {"mpi_api_wrapper":"../xml/"}
+#
+# breathe_default_project = "mpi_api_wrapper"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
