@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/dbeurle/mpi_api_wrapper.svg?branch=master)](https://travis-ci.org/dbeurle/mpi_api_wrapper) [![Documentation Status](https://readthedocs.org/projects/cppmpi/badge/?version=latest)](http://cppmpi.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/dbeurle/mpi_api_wrapper.svg?branch=master)](https://travis-ci.org/dbeurle/mpi_api_wrapper) [![Documentation Status](https://readthedocs.org/projects/cppmpi/badge/?version=latest)](http://cppmpi.readthedocs.io/en/latest/?badge=latest) [![Documentation](https://codedocs.xyz/dbeurle/mpi_api_wrapper.svg)](https://codedocs.xyz/dbeurle/mpi_api_wrapper/)
 
 # mpi_api_wrapper
 MPI bindings for modern C++.
