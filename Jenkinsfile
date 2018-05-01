@@ -8,7 +8,7 @@ pipeline {
   stages {
     stage('build') {
       steps {
-        sh 'mkdir build && cd build && module load mpi/openmpi-x86_64  && cmake .. && make all -j4'
+        sh 'mkdir build && cd build && which module && module load mpi/openmpi-x86_64  && cmake .. && make all -j4'
       }
     }
   }
