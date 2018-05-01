@@ -6,9 +6,9 @@ pipeline {
 
   }
   stages {
-    stage('print_garbage') {
+    stage('build') {
       steps {
-        sh 'echo "Hello world"'
+        sh 'mkdir build && cd build && module load mpi/openmpi-x86_64  && cmake .. && make all -j4'
       }
     }
   }
