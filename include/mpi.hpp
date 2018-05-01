@@ -9,13 +9,15 @@
 
 /// \file mpi.hpp
 /// \brief MPI function wrappers
+
+/// Namespace for wrapper functions
 namespace mpi
 {
 /// Contains the type aliases for the communicators in MPI
 /// Functions use the world communicator by default
 enum class communicator { world, self };
 
-//! The types of threading models allowed in MPI
+/// The types of threading models allowed in MPI
 enum class thread : int {
     single = MPI_THREAD_SINGLE,
     funnelled = MPI_THREAD_FUNNELED,
@@ -82,7 +84,7 @@ struct max
     MPI_Op const tag = MPI_MAX;
 };
 
-/// \class max
+/// \class prod
 /// \brief \p MPI_PROD operation
 struct prod
 {
@@ -245,7 +247,7 @@ template <typename T>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> receive(
     int const source_process, int const message_tag = 0, communicator const comm = communicator::world)
 {
-    mpi::status probe_status;
+    ::mpi::status probe_status;
 
     // Probe for an incoming message from the sending process
     MPI_Probe(source_process,
@@ -416,8 +418,11 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> br
 
 /// reduce computes across the Operation_tp and stores the result in
 /// \param host_processor (default 0)
-/// The result can be read out from the host_processor and the slave processors
-/// are none the wiser.
+/// The result can be read out only from \p host_processor
+/// \param local_data Data to be operated on
+/// \param operation_type Reduction operation
+/// \param host_processor Host processor index
+/// \param comm MPI Communicator
 template <typename T, typename Operation_Tp>
 inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
     T local_data,
@@ -438,14 +443,11 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
 }
 
 /// Compute an operation and store the result in \p host_processor (default 0)
-/// The result can be read out from the host_processor and the slave processors
-/// are none the wiser.
-/// \tparam T Value type
-/// \tparam operation_type Operator (sum, prod)
-/// \param local_data
-/// \param operation
+/// The result can be read out from the host_processor only.
+/// \param local_data Data type to reduce
+/// \param operation Type of operation
 /// \param host_processor
-/// \param comm Communicator
+/// \param comm MPI Communicator
 template <typename T, typename operation_type>
 inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> reduce(
     T const& local_data,
