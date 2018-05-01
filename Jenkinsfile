@@ -1,10 +1,9 @@
 pipeline {
   agent {
-    docker {
-      image 'fedora:27'
-      args '-v /tmp:/tmp'
+    dockerfile {
+      filename 'Dockerfile.build'
     }
-    
+
   }
   stages {
     stage('print_garbage') {
