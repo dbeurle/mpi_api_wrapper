@@ -4,6 +4,7 @@ FROM fedora:latest
 RUN dnf update -y
 
 RUN dnf install -y  cmake \
+                    git \
                     gcc-c++ \
                     clang \
                     environment-modules \
