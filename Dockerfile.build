@@ -3,7 +3,7 @@ FROM fedora:latest
 
 RUN dnf update -y
 
-RUN dnf install -y  wget bzip2 patch lcov git mercurial cmake \
-                    gcc-c++ openblas-devel MUMPS-devel \
-                    boost-devel vtk-devel hwloc-devel scotch-devel \
-                    tbb-devel arpack-devel
+RUN dnf install -y  cmake \
+                    gcc-c++ \
+                    clang \
+                    openmpi-devel
