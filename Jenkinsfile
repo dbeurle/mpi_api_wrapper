@@ -5,17 +5,17 @@ pipeline {
             additionalBuildArgs '--pull'
         }
     }
-    options { newContainerPerStage() }
     stages {
         stage('build') {
             steps {
-                sh 'if [ ! -d "build" ]; then mkdir build; fi'
-                sh 'cd build'
                 sh 'source /etc/profile.d/modules.sh \
                     module load mpi/openmpi-x86_64'
-                sh 'cmake ..'
-                sh 'make all -j4'
-                sh 'ctest'
+                sh 'if [ ! -d "build" ]; then mkdir build; fi \
+                    cd build \
+                    rm -rf * \
+                    cmake .. \
+                    make all -j4 \
+                    ctest'
             }
         }
     }
