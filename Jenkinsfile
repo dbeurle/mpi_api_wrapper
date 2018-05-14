@@ -2,7 +2,7 @@ pipeline {
   agent {
     dockerfile {
       filename 'Dockerfile.build'
-      additionalBuildArgs '--no-cache'
+      additionalBuildArgs '--pull --no-cache'
     }
 
   }
