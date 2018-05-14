@@ -2,6 +2,8 @@ pipeline {
   agent {
     dockerfile {
       filename 'Dockerfile.build'
+      label 'fedora_builder'
+      additionalBuildArgs '--no-cache'
     }
 
   }
