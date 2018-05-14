@@ -1,5 +1,6 @@
 pipeline {
   agent none
+  options { newContainerPerStage() }
   stages {
     stage('build') {
       agent {
@@ -18,13 +19,6 @@ pipeline {
         sh 'cmake ..'
         sh 'make all -j4'
       }
-    }
-  }
-  post {
-    failure {
-        mail to: 'peter@beurle.id.au',
-             subject: "Failed Pipeline still not working :( : ${currentBuild.fullDisplayName}",
-             body: "Something is wrong with ${env.BUILD_URL}"
     }
   }
 }
