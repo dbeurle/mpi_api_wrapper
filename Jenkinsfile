@@ -10,6 +10,7 @@ pipeline {
         stage('build') {
             steps {
                 sh 'cat Jenkinsfile'
+                sh 'pwd'
                 sh 'ls'
                 sh 'mkdir build'
                 sh 'cd build'
