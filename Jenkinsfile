@@ -2,9 +2,8 @@ pipeline {
   agent {
     dockerfile {
       filename 'Dockerfile.build'
-      additionalBuildArgs '--pull --no-cache'
+      additionalBuildArgs '--pull'
     }
-    options { newContainerPerStage() }
   }
   stages {
     stage('build') {
