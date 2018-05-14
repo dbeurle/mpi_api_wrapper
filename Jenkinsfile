@@ -8,9 +8,9 @@ pipeline {
     stages {
         stage('build') {
             steps {
-                sh 'source /etc/profile.d/modules.sh \
-                    module load mpi/openmpi-x86_64'
-                sh 'if [ ! -d "build" ]; then mkdir build; fi && \
+                sh 'source /etc/profile.d/modules.sh && \
+                    module load mpi/openmpi-x86_64 && \
+                    if [ ! -d "build" ]; then mkdir build; fi && \
                     cd build && \
                     rm -rf * && \
                     cmake .. && \
