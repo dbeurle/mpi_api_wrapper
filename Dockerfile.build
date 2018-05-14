@@ -6,6 +6,7 @@ RUN dnf update -y
 RUN dnf install -y  cmake \
                     git \
                     gcc-c++ \
+                    make \
                     clang \
                     environment-modules \
                     openmpi-devel
