@@ -20,4 +20,11 @@ pipeline {
       }
     }
   }
+  post {
+    failure {
+        mail to: 'peter@beurle.id.au',
+             subject: "Failed Pipeline still not working :( : ${currentBuild.fullDisplayName}",
+             body: "Something is wrong with ${env.BUILD_URL}"
+    }
+  }
 }
