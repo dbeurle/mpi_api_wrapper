@@ -9,7 +9,7 @@ pipeline {
     stage('build') {
       agent any
       steps {
-        sh 'ls; pwd; mkdir build && cd build && cmake ..'
+        sh 'ls; pwd; mkdir build && cd build && source /etc/profile.d/modules.sh && module load mpi/openmpi-x86_64  && cmake .. && make all -j4'
       }
     }
   }
