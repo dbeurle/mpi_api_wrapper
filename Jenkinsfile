@@ -4,7 +4,7 @@ pipeline {
       filename 'Dockerfile.build'
       additionalBuildArgs '--pull --no-cache'
     }
-
+    options { newContainerPerStage() }
   }
   stages {
     stage('build') {
