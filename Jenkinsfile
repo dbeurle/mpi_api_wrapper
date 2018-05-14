@@ -7,14 +7,14 @@ pipeline {
 
   }
   stages {
-    stage('configure debug') {
+    stage('openmpi module') {
       steps {
-        sh 'source /etc/profile.d/modules.sh &&                     module load mpi/openmpi-x86_64 &&                     if [ ! -d "build" ]; then mkdir build; fi &&                     cd build &&                     rm -rf * && cmake -DCMAKE_BUILD_TYPE=Debug ..'
+        sh 'source /etc/profile.d/modules.sh &&                     module load mpi/openmpi-x86_64'
       }
     }
     stage('build') {
       steps {
-        sh 'cd build && make all'
+        sh 'if [ ! -d "build" ]; then mkdir build; fi && cd build && make all'
       }
     }
     stage('test') {
