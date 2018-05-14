@@ -14,7 +14,7 @@ pipeline {
     }
     stage('build') {
       steps {
-        sh 'if [ ! -d "build" ]; then mkdir build; fi && cd build && make all'
+        sh 'if [ ! -d "build" ]; then mkdir build; fi && cd build && cmake .. && make all'
       }
     }
     stage('test') {
