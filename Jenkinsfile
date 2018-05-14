@@ -7,12 +7,7 @@ pipeline {
   }
   stages {
     stage('build') {
-      agent {
-        dockerfile {
-          filename 'Dockerfile.build'
-        }
-
-      }
+      agent any
       steps {
         sh 'ls; pwd; mkdir build && cd build && uname -a  && cmake ..'
       }
