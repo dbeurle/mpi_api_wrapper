@@ -1,5 +1,10 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'fedora:latest'
+    }
+
+  }
   stages {
     stage('build') {
       agent any
