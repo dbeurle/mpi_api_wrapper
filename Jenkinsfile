@@ -2,7 +2,7 @@ pipeline {
     agent {
         dockerfile {
             filename 'Dockerfile.build'
-            additionalBuildArgs '--pull'
+            additionalBuildArgs '--no-cache --pull --tag fedora_build_image'
         }
     }
     options { newContainerPerStage() }
