@@ -4,6 +4,7 @@ pipeline {
       filename 'Dockerfile.build'
       additionalBuildArgs '--pull'
     }
+
   }
   stages {
     stage('build') {
