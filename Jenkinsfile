@@ -7,9 +7,18 @@ pipeline {
 
   }
   stages {
-    stage('configure') {
-      steps {
-        sh 'source /etc/profile.d/modules.sh &&                     module load mpi/openmpi-x86_64 &&                     if [ ! -d "build" ]; then mkdir build; fi &&                     cd build &&                     rm -rf *'
+    stage('configure debug') {
+      parallel {
+        stage('configure debug') {
+          steps {
+            sh 'source /etc/profile.d/modules.sh &&                     module load mpi/openmpi-x86_64 &&                     if [ ! -d "build" ]; then mkdir build; fi &&                     cd build &&                     rm -rf * && cmake -DCMAKE_BUILD_TYPE=Debug ..'
+          }
+        }
+        stage('configure release') {
+          steps {
+            sh 'source /etc/profile.d/modules.sh &&                     module load mpi/openmpi-x86_64 &&                     if [ ! -d "build" ]; then mkdir build; fi &&                     cd build &&                     rm -rf * && cmake -DCMAKE_BUILD_TYPE=Release ..'
+          }
+        }
       }
     }
     stage('build') {
