@@ -9,7 +9,7 @@ pipeline {
     stage('build') {
       agent any
       steps {
-        sh 'ls; pwd; mkdir build && cd build && uname -a  && make'
+        sh 'ls; pwd; mkdir build && cd build && uname -a  && which make'
       }
     }
   }
