@@ -1,15 +1,41 @@
 pipeline {
   agent {
-    docker {
-      image 'fedora:27'
-      args '-v /tmp:/tmp'
+    dockerfile {
+      filename 'Dockerfile.build'
+      additionalBuildArgs '--pull'
+      reuseNode true
     }
-    
+
   }
   stages {
-    stage('print_garbage') {
+    stage('openmpi gcc debug') {
       steps {
-        sh 'echo "Hello world"'
+        sh '''
+             source /etc/profile.d/modules.sh
+             module load mpi/openmpi-x86_64
+             if [ ! -d "build" ]; then
+                mkdir build;
+             fi
+             cd build
+             cmake -DCMAKE_BUILD_TYPE=Debug ..
+             make all -j4
+             ctest
+           '''
+      }
+    }
+    stage('openmpi gcc release') {
+      steps {
+        sh '''
+             source /etc/profile.d/modules.sh
+             module load mpi/openmpi-x86_64
+             if [ ! -d "build" ]; then
+                mkdir build;
+             fi
+             cd build
+             cmake -DCMAKE_BUILD_TYPE=Release ..
+             make all -j4
+             ctest
+           '''
       }
     }
   }
