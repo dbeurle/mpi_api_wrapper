@@ -5,8 +5,8 @@ pipeline {
       additionalBuildArgs '--pull'
       reuseNode true
     }
-  }
 
+  }
   stages {
     stage('openmpi module') {
       steps {
