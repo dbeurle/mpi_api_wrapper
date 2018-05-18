@@ -9,4 +9,5 @@ RUN dnf install -y  cmake \
                     make \
                     clang \
                     environment-modules \
-                    openmpi-devel
+                    openmpi-devel \
+                    mpich-devel
