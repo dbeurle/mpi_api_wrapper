@@ -5,12 +5,8 @@ pipeline {
       additionalBuildArgs '--pull'
       reuseNode true
     }
-
-  environment {
-    AGENT_INFO = ''
   }
 
-  }
   stages {
     stage('openmpi module') {
       steps {
