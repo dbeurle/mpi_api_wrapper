@@ -27,7 +27,7 @@ pipeline {
               sh '''
                   cd build
                   make coverage
-                  gcovr --xml > coverage.xml
+                  gcovr --xml --output coverage.xml
                   cobertura autoUpdateHealth: false,
                   autoUpdateStability: false,
                   coberturaReportFile: 'build/coverage.xml',
