@@ -11,4 +11,4 @@ RUN dnf install -y  cmake \
                     environment-modules \
                     openmpi-devel \
                     mpich-devel \
-                    lcov
+                    lcov gcovr

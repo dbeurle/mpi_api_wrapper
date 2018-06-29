@@ -18,7 +18,7 @@ pipeline {
              fi
              cd build
              cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=1 ..
-             make all
+             make all -j3
              ctest
            '''
       }
@@ -26,8 +26,20 @@ pipeline {
           success{
               sh '''
                   cd build
-                  ls -R
                   make coverage
+                  gcovr --xml > coverage.xml
+                  cobertura autoUpdateHealth: false,
+                  autoUpdateStability: false,
+                  coberturaReportFile: 'build/coverage.xml',
+                  conditionalCoverageTargets: '70, 79, 80',
+                  failUnhealthy: false,
+                  failUnstable: false,
+                  lineCoverageTargets: '80, 79, 80',
+                  maxNumberOfBuilds: 0,
+                  methodCoverageTargets: '80, 79, 80',
+                  onlyStable: false,
+                  sourceEncoding: 'ASCII',
+                  zoomCoverageChart: false
               '''
           }
       }
@@ -42,7 +54,7 @@ pipeline {
              fi
              cd build
              cmake -DCMAKE_BUILD_TYPE=Release ..
-             make all -j4
+             make all -j3
              ctest
            '''
       }
