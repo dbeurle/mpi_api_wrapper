@@ -10,4 +10,5 @@ RUN dnf install -y  cmake \
                     clang \
                     environment-modules \
                     openmpi-devel \
-                    mpich-devel
+                    mpich-devel \
+                    lcov
