@@ -17,10 +17,19 @@ pipeline {
                 mkdir build;
              fi
              cd build
-             cmake -DCMAKE_BUILD_TYPE=Debug ..
-             make all -j4
+             cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=1 ..
+             make all
              ctest
            '''
+      }
+      post{
+          success{
+              sh '''
+                  cd build
+                  ls -R
+                  make coverage
+              '''
+          }
       }
     }
     stage('openmpi gcc release') {
