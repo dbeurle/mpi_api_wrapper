@@ -26,8 +26,7 @@ pipeline {
           success{
               sh '''
                   cd build
-                  make coverage
-                  gcovr --xml --output coverage.xml
+                  gcovr --exclude catch/src/catch.hpp --xml --output coverage.xml --root ..
                   cobertura autoUpdateHealth: false,
                   autoUpdateStability: false,
                   coberturaReportFile: 'build/coverage.xml',
