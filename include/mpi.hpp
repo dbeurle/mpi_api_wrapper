@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <type_traits>
 #include <vector>
 
@@ -550,14 +549,12 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 }
 
 /// Initialise a threaded MPI environment
-inline thread initialise(int argc, char** argv, thread const thread_required)
+inline void initialise(int argc, char** argv, thread const thread_required)
 {
     // MPI thread level provided
     auto thread_provided = static_cast<int>(thread_required);
 
     MPI_Init_thread(&argc, &argv, static_cast<int>(thread_required), &thread_provided);
-
-    return static_cast<thread>(thread_provided);
 }
 
 /// Initialise a non-threaded MPI environment
@@ -587,28 +584,7 @@ public:
     /// Threaded MPI environment
     instance(int argc, char** argv, thread const thread_required)
     {
-        auto const provided = mpi::initialise(argc, argv, thread_required);
-
-        if (mpi::rank() == 0)
-        {
-            switch (provided)
-            {
-                case mpi::thread::single:
-                    std::cout << "MPI_Init_thread level = MPI_THREAD_SINGLE\n";
-                    break;
-                case mpi::thread::funnelled:
-                    std::cout << "MPI_Init_thread level = MPI_THREAD_FUNNELED\n";
-                    break;
-                case mpi::thread::serialised:
-                    std::cout << "MPI_Init_thread level = MPI_THREAD_SERIALIZED\n";
-                    break;
-                case mpi::thread::multiple:
-                    std::cout << "MPI_Init_thread level = MPI_THREAD_MULTIPLE\n";
-                    break;
-                default:
-                    std::cout << "MPI_Init_thread level = ???\n";
-            }
-        }
+        mpi::initialise(argc, argv, thread_required);
     }
 
     ~instance() { mpi::finalise(); }
