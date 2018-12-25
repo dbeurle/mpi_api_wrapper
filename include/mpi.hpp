@@ -1,10 +1,14 @@
 
 #pragma once
 
+#include <array>
+
 #include <type_traits>
 #include <vector>
 
 #include <mpi.h>
+
+#include "detail/data_types.hpp"
 
 /// \file mpi.hpp
 /// \brief MPI function wrappers
@@ -26,9 +30,10 @@ enum class thread : int {
 
 /// Alias the MPI_Status type
 using status = MPI_Status;
-
 /// Alias the MPI_Request type
 using request = MPI_Request;
+/// Alias the MPI data type
+using type = MPI_Datatype;
 
 /// \param comm The MPI communicator \sa communicator
 /// \return The process number in the communicator
@@ -91,53 +96,56 @@ struct prod
 };
 
 /*----------------------------------------------------------------------------*
- *               Template specialisations for MPI data types                  *
+ *                    Custom defined MPI data types                           *
  *----------------------------------------------------------------------------*/
 
-template <class T>
-struct data_type;
+/// Alias the MPI_Aint type
+using address_int = MPI_Aint;
 
-template <>
-struct data_type<int>
+template <typename DerivedType, typename T>
+type create_contiguous_type(int const count = sizeof(DerivedType) / sizeof(T))
 {
-    static MPI_Datatype value_type() { return MPI_INT; }
-};
+    static_assert(std::is_standard_layout<DerivedType>::value,
+                  "DerivedType must have a standard layout");
+    static_assert(std::is_trivial<DerivedType>::value, "DerivedType must have be a trivial type");
 
-template <>
-struct data_type<long int>
-{
-    static MPI_Datatype value_type() { return MPI_LONG_INT; }
-};
+    type new_data_type;
 
-template <>
-struct data_type<long long int>
-{
-    static MPI_Datatype value_type() { return MPI_LONG_LONG_INT; }
-};
+    auto const error = MPI_Type_contiguous(count, data_type<T>::value_type(), &new_data_type);
 
-template <>
-struct data_type<char>
-{
-    static MPI_Datatype value_type() { return MPI_CHAR; }
-};
+    return new_data_type;
+}
 
-template <>
-struct data_type<float>
+template <typename DerivedType, std::size_t count>
+type create_struct_type(std::array<int, count> const& block_lengths,
+                        std::array<address_int, count> const& displacements,
+                        std::array<type, count> const& types)
 {
-    static MPI_Datatype value_type() { return MPI_FLOAT; }
-};
+    static_assert(std::is_standard_layout<DerivedType>::value,
+                  "DerivedType must have a standard layout");
+    static_assert(std::is_trivial<DerivedType>::value, "DerivedType must have be a trivial type");
 
-template <>
-struct data_type<double>
-{
-    static MPI_Datatype value_type() { return MPI_DOUBLE; }
-};
+    type new_type;
 
-template <>
-struct data_type<long double>
+    auto const error = MPI_Type_create_struct(static_cast<int>(count),
+                                              block_lengths.data(),
+                                              displacements.data(),
+                                              types.data(),
+                                              &new_type);
+
+    return new_type;
+}
+
+template <typename DataType>
+void commit(DataType& derived_data_type)
 {
-    static MPI_Datatype value_type() { return MPI_LONG_DOUBLE; }
-};
+    auto const error = MPI_Type_commit(&derived_data_type);
+}
+
+template <typename DataType>
+void free(DataType const& derived_data_type)
+{
+}
 
 /*----------------------------------------------------------------------------*
  *                              Synchronous types                             *
@@ -363,6 +371,58 @@ inline std::vector<status> wait_all(std::vector<request>& async_requests)
     MPI_Waitall(count, async_requests.data(), statuses.data());
 
     return statuses;
+}
+
+/*----------------------------------------------------------------------------*
+ *                            COLLECTIVE OPERATIONS                           *
+ *----------------------------------------------------------------------------*/
+
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> scatter(
+    T const& send_data,
+    std::size_t const send_count,
+    int const root_process,
+    communicator const comm = communicator::world)
+{
+    T recv_data;
+    recv_data.resize(send_count);
+
+    MPI_Scatter(send_data.data(),
+                send_count,
+                data_type<typename T::value_type>::value_type(),
+                recv_data.data(),
+                send_count,
+                data_type<typename T::value_type>::value_type(),
+                root_process,
+                comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+
+    return recv_data;
+}
+
+template <typename T>
+inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> gather(
+    T const& send_data,
+    std::size_t const receive_count,
+    int const root_process,
+    communicator const comm = communicator::world)
+{
+    T recv_data;
+
+    if (root_process == rank())
+    {
+        recv_data.resize(receive_count * mpi::size(comm));
+    }
+
+    MPI_Gather(send_data.data(),
+               send_data.size(),
+               data_type<typename T::value_type>::value_type(),
+               recv_data.data(),
+               receive_count,
+               data_type<typename T::value_type>::value_type(),
+               root_process,
+               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+
+    return recv_data;
 }
 
 /*----------------------------------------------------------------------------*
