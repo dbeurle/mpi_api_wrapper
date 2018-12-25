@@ -59,8 +59,7 @@ TEST_CASE("Custom datatype sending")
 
             data.index = mpi::rank();
             data.value = value;
-            value + 1.0;
-
+            value += 1.0;
             return data;
         });
 

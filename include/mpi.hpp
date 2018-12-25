@@ -117,9 +117,9 @@ type create_contiguous_type(int const count = sizeof(DerivedType) / sizeof(T))
 }
 
 template <typename DerivedType, std::size_t count>
-type create_struct_type(std::array<int, count> const& block_lengths,
-                        std::array<address_int, count> const& displacements,
-                        std::array<type, count> const& types)
+type create_struct_type(std::array<int, count> block_lengths,
+                        std::array<address_int, count> displacements,
+                        std::array<type, count> types)
 {
     static_assert(std::is_standard_layout<DerivedType>::value,
                   "DerivedType must have a standard layout");
