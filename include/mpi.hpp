@@ -117,9 +117,9 @@ type create_contiguous_type(int const count = sizeof(DerivedType) / sizeof(T))
 }
 
 template <typename DerivedType, std::size_t count>
-type create_struct_type(std::array<int, count> block_lengths,
-                        std::array<address_int, count> displacements,
-                        std::array<type, count> types)
+type create_struct_type(std::array<int, count> const& block_lengths,
+                        std::array<address_int, count> const& displacements,
+                        std::array<type, count> const& types)
 {
     static_assert(std::is_standard_layout<DerivedType>::value,
                   "DerivedType must have a standard layout");
@@ -128,9 +128,9 @@ type create_struct_type(std::array<int, count> block_lengths,
     type new_type;
 
     auto const error = MPI_Type_create_struct(static_cast<int>(count),
-                                              block_lengths.data(),
-                                              displacements.data(),
-                                              types.data(),
+                                              const_cast<int*>(block_lengths.data()),
+                                              const_cast<address_int*>(displacements.data()),
+                                              const_cast<type*>(types.data()),
                                               &new_type);
 
     return new_type;
@@ -387,7 +387,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> sc
     T recv_data;
     recv_data.resize(send_count);
 
-    MPI_Scatter(send_data.data(),
+    MPI_Scatter(const_cast<typename T::value_type*>(send_data.data()),
                 send_count,
                 data_type<typename T::value_type>::value_type(),
                 recv_data.data(),
@@ -413,7 +413,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> ga
         recv_data.resize(receive_count * mpi::size(comm));
     }
 
-    MPI_Gather(send_data.data(),
+    MPI_Gather(const_cast<typename T::value_type*>(send_data.data()),
                send_data.size(),
                data_type<typename T::value_type>::value_type(),
                recv_data.data(),
