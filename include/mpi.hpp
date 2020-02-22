@@ -523,8 +523,8 @@ inline auto all_reduce(T const& local_reduction_variable,
 /// This function allocates a vector of the same type and size of the of the
 /// communicator to store the results from the other processors.
 template <typename T>
-inline all_to_all(T local_data, communicator const comm = communicator::world)
-    ->std::enable_if_t<std::is_arithmetic<T>::value, T>
+inline auto all_to_all(T local_data, communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<T>::value, T>
 {
     T collected_data(mpi::size(comm));
 
