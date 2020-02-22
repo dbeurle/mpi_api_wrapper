@@ -171,11 +171,12 @@ struct async
 /// \param message_tag Add a tag to the message
 /// \param comm Communicator type
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value> send(blocking,
-                                                           T send_value,
-                                                           int const destination_process,
-                                                           int const message_tag = 0,
-                                                           communicator const comm = communicator::world)
+inline auto send(blocking,
+                 T send_value,
+                 int const destination_process,
+                 int const message_tag = 0,
+                 communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<T>::value>
 {
     MPI_Send(&send_value,
              1,
@@ -194,12 +195,12 @@ inline std::enable_if_t<std::is_arithmetic<T>::value> send(blocking,
 /// \param message_tag Add a tag to the message
 /// \param comm Communicator type
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
-    blocking,
-    T const& send_vector,
-    int const destination_process,
-    int const message_tag = 0,
-    communicator const comm = communicator::world)
+inline auto send(blocking,
+                 T const& send_vector,
+                 int const destination_process,
+                 int const message_tag = 0,
+                 communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename T::value_type>::value>
 {
     MPI_Send(const_cast<typename T::value_type*>(send_vector.data()),
              send_vector.size(),
@@ -217,8 +218,10 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value> send(
 /// \param comm Communicator type
 /// \return Received value
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
-    int const source_process, int const message_tag = 0, communicator const comm = communicator::world)
+inline auto receive(int const source_process,
+                    int const message_tag = 0,
+                    communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<T>::value, T>
 {
     T recieve_value;
 
@@ -243,8 +246,10 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> receive(
 /// \param comm Communicator type
 /// \return Received vector of type T
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> receive(
-    int const source_process, int const message_tag = 0, communicator const comm = communicator::world)
+inline auto receive(int const source_process,
+                    int const message_tag = 0,
+                    communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T>
 {
     ::mpi::status probe_status;
 
@@ -285,12 +290,12 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
 /// \param comm Communicator
 /// \return An MPI request object \sa request
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value, request> send(
-    async,
-    T const& send_value,
-    int const destination_process,
-    int const message_tag = 0,
-    communicator const comm = communicator::world)
+inline auto send(async,
+                 T const& send_value,
+                 int const destination_process,
+                 int const message_tag = 0,
+                 communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<T>::value, request>
 {
     request async_send_request;
 
@@ -315,12 +320,12 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, request> send(
 /// \param comm Communicator
 /// \return An MPI request object \sa request
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, request> send(
-    async,
-    T const& send_data,
-    int const destination_process,
-    int const message_tag = 0,
-    communicator const comm = communicator::world)
+inline auto send(async,
+                 T const& send_data,
+                 int const destination_process,
+                 int const message_tag = 0,
+                 communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, request>
 {
     request async_send_request;
 
@@ -341,7 +346,7 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, reque
 /// \sa wait_all()
 /// \param async_request
 /// \return The status of the asynchronous operation
-inline status wait(request async_request)
+inline auto wait(request async_request) -> status
 {
     status wait_status;
     MPI_Wait(&async_request, &wait_status);
@@ -354,7 +359,7 @@ inline status wait(request async_request)
 /// \sa wait()
 /// \param async_requests A std::vector of request objects
 /// \return A std::vector of statuses of the asynchronous operation
-inline std::vector<status> wait_all(std::vector<request>& async_requests)
+inline auto wait_all(std::vector<request>& async_requests) -> std::vector<status>
 {
     int const count = async_requests.size();
 
@@ -378,8 +383,10 @@ inline std::vector<status> wait_all(std::vector<request>& async_requests)
 /// \param comm MPI communicator
 /// \return Broadcasted data
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
-    T local_data, int const host_processor = 0, communicator const comm = communicator::world)
+inline auto broadcast(T local_data,
+                      int const host_processor = 0,
+                      communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<T>::value, T>
 {
     MPI_Bcast(&local_data,
               1,
@@ -399,8 +406,10 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> broadcast(
 /// \param comm MPI communicator
 /// \return The broadcast data
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> broadcast(
-    T local_data, int const host_processor = 0, communicator const comm = communicator::world)
+inline auto broadcast(T local_data,
+                      int const host_processor = 0,
+                      communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T>
 {
     MPI_Bcast(local_data.data(),
               local_data.size(),
@@ -423,11 +432,11 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> br
 /// \param host_processor Host processor index
 /// \param comm MPI Communicator
 template <typename T, typename Operation_Tp>
-inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
-    T local_data,
-    Operation_Tp&& operation_type,
-    int const host_processor = 0,
-    communicator const comm = communicator::world)
+inline auto reduce(T local_data,
+                   Operation_Tp&& operation_type,
+                   int const host_processor = 0,
+                   communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<T>::value, T>
 {
     T collected_data;
 
@@ -448,11 +457,11 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> reduce(
 /// \param host_processor
 /// \param comm MPI Communicator
 template <typename T, typename operation_type>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> reduce(
-    T const& local_data,
-    operation_type&& operation,
-    int const host_processor = 0,
-    communicator const comm = communicator::world)
+inline auto reduce(T const& local_data,
+                   operation_type&& operation,
+                   int const host_processor = 0,
+                   communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T>
 {
     T collected_data(local_data.size());
 
@@ -471,8 +480,10 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> re
 /// operations defined on it.  This function call is only for scalar (primitive)
 /// values.
 template <typename T, typename Operation_Tp>
-inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
-    T local_reduction_variable, Operation_Tp&& operation, communicator const comm = communicator::world)
+inline auto all_reduce(T local_reduction_variable,
+                       Operation_Tp&& operation,
+                       communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<T>::value, T>
 {
     T reduction_variable;
 
@@ -491,10 +502,10 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_reduce(
 /// This function allocates a vector of the same type and size of the input
 /// vector and fills it with the result from the all_reduce operation
 template <typename T, typename Operation_Tp>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_reduce(
-    T const& local_reduction_variable,
-    Operation_Tp&& operation,
-    communicator const comm = communicator::world)
+inline auto all_reduce(T const& local_reduction_variable,
+                       Operation_Tp&& operation,
+                       communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T>
 {
     T reduction_variable(local_reduction_variable.size());
 
@@ -512,8 +523,8 @@ inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> al
 /// This function allocates a vector of the same type and size of the of the
 /// communicator to store the results from the other processors.
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
-    T local_data, communicator const comm = communicator::world)
+inline all_to_all(T local_data, communicator const comm = communicator::world)
+    ->std::enable_if_t<std::is_arithmetic<T>::value, T>
 {
     T collected_data(mpi::size(comm));
 
@@ -532,8 +543,8 @@ inline std::enable_if_t<std::is_arithmetic<T>::value, T> all_to_all(
 /// This function allocates a vector of the same type and size of the of the
 /// communicator to store the results from the other processors.
 template <typename T>
-inline std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T> all_to_all(
-    T const& local_data, communicator const comm = communicator::world)
+inline auto all_to_all(T const& local_data, communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename T::value_type>::value, T>
 {
     T collected_data(local_data.size() * mpi::size(comm));
 
