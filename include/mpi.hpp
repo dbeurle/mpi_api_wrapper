@@ -559,6 +559,29 @@ inline auto all_to_all(T const& local_data, communicator const comm = communicat
     return collected_data;
 }
 
+// Perform an MPIGather operation assuming that every process is sending
+// the same amount of data.
+// \return A vector of the gathered data if this process is the master
+template <typename VectorType>
+inline auto gather(VectorType const& local_data,
+                   int const root_process,
+                   communicator const comm = communicator::world)
+    -> std::enable_if_t<std::is_arithmetic<typename VectorType::value_type>::value, VectorType>
+{
+    VectorType collected_data(root_process == ::mpi::rank() ? local_data.size() * mpi::size(comm)
+                                                            : 1);
+    MPI_Gather(const_cast<typename VectorType::value_type*>(local_data.data()),
+               local_data.size(),
+               data_type<typename VectorType::value_type>::value_type(),
+               collected_data.data(),
+               local_data.size(),
+               data_type<typename VectorType::value_type>::value_type(),
+               root_process,
+               comm == communicator::world ? MPI_COMM_WORLD : MPI_COMM_SELF);
+
+    return collected_data;
+}
+
 /// Initialise a threaded MPI environment
 inline void initialise(int argc, char** argv, thread const thread_required)
 {

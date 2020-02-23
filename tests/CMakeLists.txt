@@ -1,5 +1,5 @@
 
-foreach(test all_reduce send_receive broadcast)
+foreach(test all_reduce send_receive broadcast gather)
     add_executable(${test} ${test}.cpp)
 
     add_dependencies(${test} catch)
